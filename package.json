@@ -1,0 +1,28 @@
+{
+	"name": "rift-js",
+	"version": "0.1.0",
+	"description": "A TypeScript SDK for the Rift Protocol",
+	"main": "dist/rift-js.cjs.js",
+	"module": "dist/rift-js.esm.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "rollup -c --bundleConfigAsCjs",
+		"test": "jest",
+		"coverage": "jest --coverage",
+		"format": "prettier --write \"**/*.{ts,tsx,md}\""
+	},
+	"dependencies": {
+	},
+	"devDependencies": {
+		"@rollup/plugin-commonjs": "^28.0.2",
+		"@rollup/plugin-json": "^6.1.0",
+		"@rollup/plugin-node-resolve": "^16.0.0",
+		"@types/jest": "^29.5.14",
+		"jest": "^29.7.0",
+		"prettier": "^3.5.2",
+		"rollup": "^4.34.8",
+		"rollup-plugin-typescript2": "^0.36.0",
+		"ts-jest": "^29.2.6",
+		"typescript": "^5.7.3"
+	}
+}
