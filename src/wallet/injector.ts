@@ -20,7 +20,7 @@ export interface IframeInjectorOptions {
 /**
  * Default sandbox attributes for security
  */
-const DEFAULT_SANDBOX = 'allow-scripts allow-forms allow-popups allow-downloads';
+const DEFAULT_SANDBOX = 'allow-scripts allow-forms allow-popups allow-downloads allow-same-origin';
 
 /**
  * Utility to inject iframes for Rift links
