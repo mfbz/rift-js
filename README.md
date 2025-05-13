@@ -474,12 +474,10 @@ import { setConfig } from 'rift-js';
 // Enable HTTP for local development
 setConfig({
   useHttpForLocalDevelopment: true,
-  // Optionally add additional hosts that should be treated as local
-  localHosts: ['localhost', '127.0.0.1', 'my-dev-server.local']
 });
 ```
 
-This will convert `rift://localhost:3000/path` to `http://localhost:3000/path` instead of `https://localhost:3000/path`.
+This will convert all `rift://` URLs to `http://` instead of `https://` when `useHttpForLocalDevelopment` is enabled.
 
 ## 🤝 Contributing
 

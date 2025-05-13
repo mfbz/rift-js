@@ -1,17 +1,16 @@
 import { RiftContextMessage, RiftErrorMessage, RiftResultMessage, RiftScriptResultMessage } from '../rift';
 import { RIFT_HTTPS_PREFIX, RIFT_HTTP_PREFIX } from '../constants';
-import { getConfig, isLocalHost } from '../config';
+import { getConfig } from '../config';
 
 /**
  * Get the appropriate protocol prefix (http:// or https://) based on configuration
- * and the target host
  *
  * @param host The host to check
  * @returns The appropriate protocol prefix
  */
 export function getProtocolPrefix(host: string): string {
 	const config = getConfig();
-	const useHttp = config.useHttpForLocalDevelopment && isLocalHost(host);
+	const useHttp = config.useHttpForLocalDevelopment;
 	return useHttp ? RIFT_HTTP_PREFIX : RIFT_HTTPS_PREFIX;
 }
 

@@ -11,7 +11,8 @@
 		"coverage": "jest --coverage",
 		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
 		"starter:dev": "cd starters/react-starter && npm install && npm run dev",
-		"starter:build": "cd starters/react-starter && npm install && npm run build"
+		"starter:build": "cd starters/react-starter && npm install && npm run build",
+		"open:test-rift": "npx http-server -o /test-rift.html"
 	},
 	"dependencies": {},
 	"devDependencies": {
