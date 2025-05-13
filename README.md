@@ -464,6 +464,23 @@ rift://localhost:5173
 
 3. Harpoon detects the link, injects the iframe, and connects.
 
+### 📡 Using HTTP for Development
+
+By default, rift:// URLs are converted to https:// when injected as iframes. For local development or testing environments, you can enable HTTP instead:
+
+```js
+import { setConfig } from 'rift-js';
+
+// Enable HTTP for local development
+setConfig({
+  useHttpForLocalDevelopment: true,
+  // Optionally add additional hosts that should be treated as local
+  localHosts: ['localhost', '127.0.0.1', 'my-dev-server.local']
+});
+```
+
+This will convert `rift://localhost:3000/path` to `http://localhost:3000/path` instead of `https://localhost:3000/path`.
+
 ## 🤝 Contributing
 
 We welcome contributions!

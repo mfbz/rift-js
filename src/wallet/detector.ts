@@ -1,5 +1,6 @@
-import { RIFT_URI_SCHEME, RIFT_HTTPS_PREFIX } from '../constants';
+import { RIFT_URI_SCHEME } from '../constants';
 import { parseRiftUri } from '../utils';
+import { getProtocolPrefix } from './helpers';
 
 /**
  * Options for link detection
@@ -14,7 +15,7 @@ export interface RiftDetectorOptions {
 }
 
 /**
- * Default conversion function to transform rift:// URLs to https:// ones
+ * Default conversion function to transform rift:// URLs to https:// or http:// (for local development) ones
  */
 export function convertRiftUrl(url: string): string {
 	if (!url.startsWith(RIFT_URI_SCHEME)) {
@@ -26,7 +27,8 @@ export function convertRiftUrl(url: string): string {
 		return url;
 	}
 
-	return `${RIFT_HTTPS_PREFIX}${parsed.host}${parsed.path}${parsed.query}`;
+	const prefix = getProtocolPrefix(parsed.host);
+	return `${prefix}${parsed.host}${parsed.path}${parsed.query}`;
 }
 
 /**
