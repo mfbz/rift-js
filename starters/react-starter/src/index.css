@@ -1,0 +1,80 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+  color: #000;
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+}
+
+#root {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+}
+
+.rift-widget {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+.rift-widget h1 {
+  color: #4f46e5;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.rift-widget h2 {
+  font-size: 1.2rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.rift-widget .address {
+  font-family: monospace;
+  background-color: #eee;
+  padding: 0.5rem;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.rift-widget button {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  margin: 8px 8px 8px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.rift-widget button:hover {
+  background-color: #4338ca;
+}
+
+.rift-widget .result {
+  background-color: #e0e7ff;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.rift-widget .error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+} 

@@ -9,10 +9,11 @@
 		"build": "rollup -c --bundleConfigAsCjs",
 		"test": "jest",
 		"coverage": "jest --coverage",
-		"format": "prettier --write \"**/*.{ts,tsx,md}\""
+		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
+		"starter:dev": "cd starters/react-starter && npm install && npm run dev",
+		"starter:build": "cd starters/react-starter && npm install && npm run build"
 	},
-	"dependencies": {
-	},
+	"dependencies": {},
 	"devDependencies": {
 		"@rollup/plugin-commonjs": "^28.0.2",
 		"@rollup/plugin-json": "^6.1.0",
