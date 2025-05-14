@@ -169,7 +169,7 @@ export class RiftDetector {
 				range.setStart(textNode, startIndex);
 				range.setEnd(textNode, endIndex);
 
-				// Notify handler (isLink = false for text nodes)
+				// Notify handler
 				this.options.onRiftUriFound!(textNode, riftUri, range);
 			}
 		}
