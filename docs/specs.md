@@ -17,7 +17,7 @@ This system provides a seamless way to embed blockchain actions into any digital
 1. A developer hosts a UI widget at a public HTTPS URL.
 2. The developer shares a `rift://` URI (like in a tweet or on their site or in any webpage).
 3. When a user with **Harpoon Wallet** visits a page containing that URI:
-   - Harpoon detects it (in links or plain text)
+   - Harpoon detects it in text content
    - Prompts the user
    - Injects a **sandboxed iframe** pointing to that URL
 4. The iframe uses `rift-js` to automatically connect with the wallet
@@ -44,19 +44,15 @@ rift://mydapp.com/rift/quiz?ref=abc
 
 - **Only HTTPS iframe URLs are allowed:** `rift://` is resolved to `https://...`
 - The wallet injects an iframe pointing to `https://mydapp.com/rift/quiz?ref=abc`
-- URIs can be detected in both hyperlinks and plain text content
+- URIs can be detected in text content
 
 ## URI Detection
 
-Harpoon detects `rift://` URIs in two ways:
+Harpoon detects `rift://` URIs in text content:
 
-1. **Hyperlinks**: Any `<a href="rift://...">` element
-2. **Plain text**: Any text node containing a `rift://` URI pattern
-
-This dual detection approach enables:
-- Rift URIs to work in tweets, posts, and messages, even without clickable links
-- Seamless injection regardless of how a URI appears on the page
-- Automatic conversion of text URIs to interactive frames
+- Any text node containing a `rift://` URI pattern is detected
+- This detection approach enables Rift URIs to work in tweets, posts, and messages
+- Seamless injection of text URIs into interactive frames
 
 ## Security Model
 
@@ -155,7 +151,7 @@ Harpoon, as the first Rift-compatible wallet, must:
 ## Example Use Case
 
 1. Dev hosts widget at <https://quiz.mydapp.com>
-2. Dev shares `rift://quiz.mydapp.com` in a tweet (either as a link or plain text)
+2. Dev shares `rift://quiz.mydapp.com` in a tweet as text
 3. User sees the URI in a tweet or on a site
 4. Harpoon sees the URI → injects the iframe (after approval)
 5. Iframe UI calls:
@@ -165,8 +161,8 @@ const rift = await rift();
 const result = await rift.submitTransaction({ ... });
 ```
 
-1. User signs tx via Harpoon popup
-2. Result passed back into the iframe via `rift:mutateResult`
+6. User signs tx via Harpoon popup
+7. Result passed back into the iframe via `rift:mutateResult`
 
 ## Trusted Injection Domains
 
