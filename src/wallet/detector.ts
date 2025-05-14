@@ -7,7 +7,7 @@ import { getProtocolPrefix } from './helpers';
  */
 export interface RiftDetectorOptions {
 	/** Function to call when a Rift URI is found */
-	onRiftUriFound?: (node: Node, riftUrl: string, range: Range, isLink: boolean) => void;
+	onRiftUriFound?: (node: Node, riftUrl: string, range: Range) => void;
 	/** Only scan specific elements */
 	rootElement?: HTMLElement;
 	/** Throttle text scanning to reduce performance impact (ms) */
@@ -170,52 +170,8 @@ export class RiftDetector {
 				range.setEnd(textNode, endIndex);
 
 				// Notify handler (isLink = false for text nodes)
-				this.options.onRiftUriFound!(textNode, riftUri, range, false);
+				this.options.onRiftUriFound!(textNode, riftUri, range);
 			}
 		}
 	}
-}
-
-/**
- * Utility function to find all Rift URIs in a page
- * Returns an array of objects containing the node, URI, range, and whether it's a link
- */
-export function findRiftUris(): Array<{ node: Node; riftUri: string; range: Range; isLink: boolean }> {
-	const results: Array<{ node: Node; riftUri: string; range: Range; isLink: boolean }> = [];
-
-	// Find text URIs
-	const treeWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
-		acceptNode: (node) => {
-			const parent = node.parentElement;
-			if (!parent) return NodeFilter.FILTER_REJECT;
-
-			if (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE') {
-				return NodeFilter.FILTER_REJECT;
-			}
-
-			return node.textContent && node.textContent.includes('rift://')
-				? NodeFilter.FILTER_ACCEPT
-				: NodeFilter.FILTER_REJECT;
-		},
-	});
-
-	let textNode: Text | null;
-	while ((textNode = treeWalker.nextNode() as Text | null)) {
-		const text = textNode.textContent || '';
-		const matches = text.matchAll(RIFT_URI_REGEX);
-
-		for (const match of matches) {
-			const riftUri = match[0];
-			const startIndex = match.index!;
-			const endIndex = startIndex + riftUri.length;
-
-			const range = document.createRange();
-			range.setStart(textNode, startIndex);
-			range.setEnd(textNode, endIndex);
-
-			results.push({ node: textNode, riftUri, range, isLink: false });
-		}
-	}
-
-	return results;
 }
