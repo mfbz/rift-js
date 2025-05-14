@@ -8,8 +8,6 @@ import { getProtocolPrefix } from './helpers';
 export interface RiftDetectorOptions {
 	/** Function to call when a Rift URI is found */
 	onRiftUriFound?: (node: Node, riftUrl: string, range: Range, isLink: boolean) => void;
-	/** Auto-convert links to injectable format */
-	autoConvert?: boolean;
 	/** Only scan specific elements */
 	rootElement?: HTMLElement;
 	/** Throttle text scanning to reduce performance impact (ms) */
@@ -40,7 +38,7 @@ export function convertRiftUrl(url: string): string {
 const RIFT_URI_REGEX = /(rift:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*[a-zA-Z0-9](?::\d+)?(?:\/[-a-zA-Z0-9()@:%_\+.~#?&//=]*)?)/g;
 
 /**
- * Detector class for finding Rift protocol URIs in a webpage, both in text and links
+ * Detector class for finding Rift protocol URIs in a webpage in text nodes
  */
 export class RiftDetector {
 	private options: RiftDetectorOptions;
@@ -50,7 +48,6 @@ export class RiftDetector {
 
 	constructor(options: RiftDetectorOptions = {}) {
 		this.options = {
-			autoConvert: false,
 			rootElement: document.body,
 			scanThrottle: 500, // Default throttle of 500ms
 			...options,
@@ -75,13 +72,6 @@ export class RiftDetector {
 				} else if (mutation.type === 'characterData') {
 					shouldScan = true;
 					break;
-				} else if (
-					mutation.type === 'attributes' &&
-					mutation.attributeName === 'href' &&
-					(mutation.target as HTMLElement).getAttribute('href')?.startsWith(RIFT_URI_SCHEME)
-				) {
-					shouldScan = true;
-					break;
 				}
 			}
 
@@ -94,8 +84,6 @@ export class RiftDetector {
 			childList: true,
 			subtree: true,
 			characterData: true,
-			attributes: true,
-			attributeFilter: ['href'],
 		});
 	}
 
@@ -133,44 +121,13 @@ export class RiftDetector {
 
 	/**
 	 * Scan the document for Rift URIs using TreeWalker for efficiency
-	 * This scans both text nodes and link elements
+	 * This scans text nodes only
 	 */
 	private scanForRiftUris(): void {
 		if (!this.options.onRiftUriFound) return;
 
-		// First, scan for link elements with rift:// hrefs
-		this.scanLinkElements();
-
-		// Then scan text nodes
+		// Scan text nodes
 		this.scanTextNodes();
-	}
-
-	/**
-	 * Scan for link elements with rift:// hrefs
-	 */
-	private scanLinkElements(): void {
-		if (!this.options.onRiftUriFound) return;
-
-		const rootElement = this.options.rootElement || document.body;
-		const links = rootElement.querySelectorAll<HTMLAnchorElement>('a[href^="rift://"]');
-
-		links.forEach((link) => {
-			const href = link.getAttribute('href') || '';
-
-			if (href.startsWith(RIFT_URI_SCHEME)) {
-				if (this.options.autoConvert) {
-					const httpsUrl = convertRiftUrl(href);
-					link.setAttribute('data-original-rift-url', href);
-					link.setAttribute('href', httpsUrl);
-				}
-
-				// Create a range for the entire link element
-				const range = document.createRange();
-				range.selectNode(link);
-
-				this.options.onRiftUriFound!(link, href, range, true);
-			}
-		});
 	}
 
 	/**
@@ -182,15 +139,11 @@ export class RiftDetector {
 		const rootElement = this.options.rootElement || document.body;
 		const treeWalker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT, {
 			acceptNode: (node) => {
-				// Skip text nodes that are in script, style, or are inside links we already processed
+				// Skip text nodes that are in script, style
 				const parent = node.parentElement;
 				if (!parent) return NodeFilter.FILTER_REJECT;
 
-				if (
-					parent.tagName === 'SCRIPT' ||
-					parent.tagName === 'STYLE' ||
-					(parent.tagName === 'A' && parent.getAttribute('href')?.startsWith(RIFT_URI_SCHEME))
-				) {
+				if (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE') {
 					return NodeFilter.FILTER_REJECT;
 				}
 
@@ -230,26 +183,13 @@ export class RiftDetector {
 export function findRiftUris(): Array<{ node: Node; riftUri: string; range: Range; isLink: boolean }> {
 	const results: Array<{ node: Node; riftUri: string; range: Range; isLink: boolean }> = [];
 
-	// Find links
-	const links = document.querySelectorAll<HTMLAnchorElement>('a[href^="rift://"]');
-	links.forEach((link) => {
-		const href = link.getAttribute('href') || '';
-		const range = document.createRange();
-		range.selectNode(link);
-		results.push({ node: link, riftUri: href, range, isLink: true });
-	});
-
 	// Find text URIs
 	const treeWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
 		acceptNode: (node) => {
 			const parent = node.parentElement;
 			if (!parent) return NodeFilter.FILTER_REJECT;
 
-			if (
-				parent.tagName === 'SCRIPT' ||
-				parent.tagName === 'STYLE' ||
-				(parent.tagName === 'A' && parent.getAttribute('href')?.startsWith(RIFT_URI_SCHEME))
-			) {
+			if (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE') {
 				return NodeFilter.FILTER_REJECT;
 			}
 
