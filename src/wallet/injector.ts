@@ -15,7 +15,18 @@ export interface IframeInjectorOptions {
 	onIframeInjected?: (iframe: HTMLIFrameElement, originalElement: HTMLElement) => void;
 	/** Function to call when an iframe is removed */
 	onIframeRemoved?: (iframe: HTMLIFrameElement, originalElement: HTMLElement) => void;
+	/** Function to call when an iframe has a loading error */
+	onIframeError?: (error: Error, iframe: HTMLIFrameElement, originalElement: HTMLElement) => void;
 }
+
+// Add CSP error detection
+document.addEventListener('securitypolicyviolation', (e) => {
+	console.error('Content Security Policy violation:', {
+		blockedURI: e.blockedURI,
+		violatedDirective: e.violatedDirective,
+		originalPolicy: e.originalPolicy,
+	});
+});
 
 /**
  * Default sandbox attributes for security
@@ -36,6 +47,18 @@ export class IframeInjector {
 			sandboxAttributes: DEFAULT_SANDBOX,
 			...options,
 		};
+
+		// Listen for messages from iframes
+		window.addEventListener('message', (event) => {
+			// Check if message is from one of our iframes
+			const isFromInjectedFrame = Array.from(this.injectedFrames.values()).some(
+				(iframe) => iframe.contentWindow === event.source,
+			);
+
+			if (isFromInjectedFrame) {
+				console.log('Message from Rift iframe:', event.data);
+			}
+		});
 	}
 
 	/**
@@ -62,6 +85,41 @@ export class IframeInjector {
 		iframe.sandbox.value = this.options.sandboxAttributes || DEFAULT_SANDBOX;
 		iframe.setAttribute('data-rift-frame', 'true');
 		iframe.setAttribute('data-original-rift-url', riftUrl);
+
+		// Add loading indicator
+		const loadingMessage = document.createElement('div');
+		loadingMessage.textContent = 'Loading Rift content...';
+		loadingMessage.style.padding = '10px';
+		loadingMessage.style.textAlign = 'center';
+		loadingMessage.style.fontFamily = 'sans-serif';
+		element.parentNode?.insertBefore(loadingMessage, element);
+
+		// Add loading and error event handlers
+		iframe.addEventListener('load', () => {
+			if (loadingMessage.parentNode) {
+				loadingMessage.parentNode.removeChild(loadingMessage);
+			}
+			console.log('Rift iframe loaded:', riftUrl);
+		});
+
+		// Set a timeout to detect loading issues
+		const timeout = setTimeout(() => {
+			console.warn('Rift iframe load timeout:', riftUrl);
+			if (iframe.contentDocument) {
+				console.info('Iframe content state:', iframe.contentDocument.readyState);
+			}
+		}, 5000);
+
+		iframe.addEventListener('load', () => clearTimeout(timeout));
+		iframe.addEventListener('error', (e) => {
+			console.error('Rift iframe loading error:', e);
+			clearTimeout(timeout);
+
+			if (this.options.onIframeError) {
+				const error = new Error(`Failed to load iframe content: ${riftUrl}`);
+				this.options.onIframeError(error, iframe, element);
+			}
+		});
 
 		// Replace the element with the iframe
 		if (element.parentNode) {

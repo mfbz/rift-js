@@ -33,6 +33,19 @@ export class RiftBridge extends EventEmitter {
 			return;
 		}
 
+		// Ensure the DOM is fully loaded before attempting to connect
+		if (document.readyState !== 'complete') {
+			return new Promise((resolve) => {
+				window.addEventListener(
+					'load',
+					() => {
+						this.connect().then(resolve);
+					},
+					{ once: true },
+				);
+			});
+		}
+
 		const handshakeMsg: RiftHandshakeMessage = {
 			type: 'rift:handshake',
 		};
@@ -192,10 +205,29 @@ export class RiftBridge extends EventEmitter {
 			id: generateMessageId(),
 		};
 
-		if (window.parent !== window) {
-			window.parent.postMessage(messageWithId, '*');
+		// Check if parent window exists and is not the same as current window
+		if (window.parent && window.parent !== window) {
+			try {
+				window.parent.postMessage(messageWithId, '*');
+			} catch (error) {
+				console.error('Error sending message to parent:', error);
+				this.emit('error', normalizeError(error));
+			}
 		} else {
 			console.warn('No parent window found for postMessage');
+
+			// For handshake messages, retry with a delay to ensure iframe is fully loaded
+			if (message.type === 'rift:handshake') {
+				setTimeout(() => {
+					if (window.parent && window.parent !== window) {
+						try {
+							window.parent.postMessage(messageWithId, '*');
+						} catch (error) {
+							console.error('Error sending message to parent on retry:', error);
+						}
+					}
+				}, 1000); // 1 second delay for retry
+			}
 		}
 	}
 
@@ -203,35 +235,44 @@ export class RiftBridge extends EventEmitter {
 	 * Set up the message event listener
 	 */
 	private setupMessageListener(): void {
-		window.addEventListener('message', (event) => {
-			const data = event.data;
+		// Wait for DOM ready state if needed
+		const setupListener = () => {
+			window.addEventListener('message', (event) => {
+				const data = event.data;
 
-			if (!data || !data.type || !data.type.startsWith('rift:')) {
-				return;
-			}
-
-			try {
-				switch (data.type) {
-					case 'rift:context':
-						this.handleContextMessage(data as RiftContextMessage);
-						break;
-					case 'rift:mutateResult':
-						this.emit('rift:mutateResult' as RiftEventType, data);
-						break;
-					case 'rift:queryResult':
-						this.emit('rift:queryResult' as RiftEventType, data);
-						break;
-					case 'rift:error':
-						this.emit('rift:error' as RiftEventType, data);
-						break;
-					default:
-						console.warn(`Unknown message type: ${data.type}`);
+				if (!data || !data.type || !data.type.startsWith('rift:')) {
+					return;
 				}
-			} catch (error) {
-				const normalizedError = normalizeError(error);
-				this.emit('error', normalizedError);
-			}
-		});
+
+				try {
+					switch (data.type) {
+						case 'rift:context':
+							this.handleContextMessage(data as RiftContextMessage);
+							break;
+						case 'rift:mutateResult':
+							this.emit('rift:mutateResult' as RiftEventType, data);
+							break;
+						case 'rift:queryResult':
+							this.emit('rift:queryResult' as RiftEventType, data);
+							break;
+						case 'rift:error':
+							this.emit('rift:error' as RiftEventType, data);
+							break;
+						default:
+							console.warn(`Unknown message type: ${data.type}`);
+					}
+				} catch (error) {
+					const normalizedError = normalizeError(error);
+					this.emit('error', normalizedError);
+				}
+			});
+		};
+
+		if (document.readyState === 'loading') {
+			window.addEventListener('DOMContentLoaded', setupListener);
+		} else {
+			setupListener();
+		}
 	}
 
 	/**

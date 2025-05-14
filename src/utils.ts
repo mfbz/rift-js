@@ -3,7 +3,13 @@
  * (running in an iframe injected by a wallet)
  */
 export function isRiftFrame(): boolean {
-	return window.self !== window.top;
+	try {
+		return window.self !== window.top && window.top !== null;
+	} catch (e) {
+		// If we can't access window.top due to cross-origin restrictions,
+		// we're likely in an iframe
+		return true;
+	}
 }
 
 /**
