@@ -3,15 +3,17 @@ import { parseRiftUri } from '../utils';
 import { getProtocolPrefix } from './helpers';
 
 /**
- * Options for link detection
+ * Options for Rift URI detection
  */
 export interface RiftDetectorOptions {
-	/** Function to call when a Rift link is found */
-	onRiftLinkFound?: (element: HTMLAnchorElement, riftUrl: string) => void;
+	/** Function to call when a Rift URI is found */
+	onRiftUriFound?: (node: Node, riftUrl: string, range: Range, isLink: boolean) => void;
 	/** Auto-convert links to injectable format */
 	autoConvert?: boolean;
 	/** Only scan specific elements */
 	rootElement?: HTMLElement;
+	/** Throttle text scanning to reduce performance impact (ms) */
+	scanThrottle?: number;
 }
 
 /**
@@ -32,56 +34,123 @@ export function convertRiftUrl(url: string): string {
 }
 
 /**
- * Detector class for finding Rift protocol links in a webpage
+ * Regular expression to find rift:// URIs in text
+ * Matches rift:// followed by domain and optional path/query parameters
+ */
+const RIFT_URI_REGEX = /(rift:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*[a-zA-Z0-9](?::\d+)?(?:\/[-a-zA-Z0-9()@:%_\+.~#?&//=]*)?)/g;
+
+/**
+ * Detector class for finding Rift protocol URIs in a webpage, both in text and links
  */
 export class RiftDetector {
 	private options: RiftDetectorOptions;
 	private observer: MutationObserver | null = null;
+	private scanTimeout: number | null = null;
+	private pendingScan = false;
 
 	constructor(options: RiftDetectorOptions = {}) {
 		this.options = {
 			autoConvert: false,
 			rootElement: document.body,
+			scanThrottle: 500, // Default throttle of 500ms
 			...options,
 		};
 	}
 
 	/**
-	 * Start scanning for Rift links
+	 * Start scanning for Rift URIs
 	 */
 	public start(): void {
 		// Initial scan
-		this.scanForRiftLinks();
+		this.scanForRiftUris();
 
-		// Setup observer for new links
+		// Setup observer for DOM changes
 		this.observer = new MutationObserver((mutations) => {
-			mutations.forEach((mutation) => {
+			let shouldScan = false;
+
+			for (const mutation of mutations) {
 				if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-					this.scanForRiftLinks();
+					shouldScan = true;
+					break;
+				} else if (mutation.type === 'characterData') {
+					shouldScan = true;
+					break;
+				} else if (
+					mutation.type === 'attributes' &&
+					mutation.attributeName === 'href' &&
+					(mutation.target as HTMLElement).getAttribute('href')?.startsWith(RIFT_URI_SCHEME)
+				) {
+					shouldScan = true;
+					break;
 				}
-			});
+			}
+
+			if (shouldScan && !this.pendingScan) {
+				this.scheduleScan();
+			}
 		});
 
 		this.observer.observe(this.options.rootElement || document.body, {
 			childList: true,
 			subtree: true,
+			characterData: true,
+			attributes: true,
+			attributeFilter: ['href'],
 		});
 	}
 
 	/**
-	 * Stop scanning for Rift links
+	 * Schedule a throttled scan to avoid performance issues
+	 */
+	private scheduleScan(): void {
+		if (this.scanTimeout !== null) {
+			window.clearTimeout(this.scanTimeout);
+		}
+
+		this.pendingScan = true;
+		this.scanTimeout = window.setTimeout(() => {
+			this.scanForRiftUris();
+			this.pendingScan = false;
+			this.scanTimeout = null;
+		}, this.options.scanThrottle);
+	}
+
+	/**
+	 * Stop scanning for Rift URIs
 	 */
 	public stop(): void {
 		if (this.observer) {
 			this.observer.disconnect();
 			this.observer = null;
 		}
+
+		if (this.scanTimeout !== null) {
+			window.clearTimeout(this.scanTimeout);
+			this.scanTimeout = null;
+			this.pendingScan = false;
+		}
 	}
 
 	/**
-	 * Scan the document for Rift links
+	 * Scan the document for Rift URIs using TreeWalker for efficiency
+	 * This scans both text nodes and link elements
 	 */
-	private scanForRiftLinks(): void {
+	private scanForRiftUris(): void {
+		if (!this.options.onRiftUriFound) return;
+
+		// First, scan for link elements with rift:// hrefs
+		this.scanLinkElements();
+
+		// Then scan text nodes
+		this.scanTextNodes();
+	}
+
+	/**
+	 * Scan for link elements with rift:// hrefs
+	 */
+	private scanLinkElements(): void {
+		if (!this.options.onRiftUriFound) return;
+
 		const rootElement = this.options.rootElement || document.body;
 		const links = rootElement.querySelectorAll<HTMLAnchorElement>('a[href^="rift://"]');
 
@@ -95,17 +164,118 @@ export class RiftDetector {
 					link.setAttribute('href', httpsUrl);
 				}
 
-				if (this.options.onRiftLinkFound) {
-					this.options.onRiftLinkFound(link, href);
-				}
+				// Create a range for the entire link element
+				const range = document.createRange();
+				range.selectNode(link);
+
+				this.options.onRiftUriFound!(link, href, range, true);
 			}
 		});
+	}
+
+	/**
+	 * Scan for Rift URIs in text nodes
+	 */
+	private scanTextNodes(): void {
+		if (!this.options.onRiftUriFound) return;
+
+		const rootElement = this.options.rootElement || document.body;
+		const treeWalker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT, {
+			acceptNode: (node) => {
+				// Skip text nodes that are in script, style, or are inside links we already processed
+				const parent = node.parentElement;
+				if (!parent) return NodeFilter.FILTER_REJECT;
+
+				if (
+					parent.tagName === 'SCRIPT' ||
+					parent.tagName === 'STYLE' ||
+					(parent.tagName === 'A' && parent.getAttribute('href')?.startsWith(RIFT_URI_SCHEME))
+				) {
+					return NodeFilter.FILTER_REJECT;
+				}
+
+				// Only accept nodes that might contain our URIs
+				return node.textContent && node.textContent.includes('rift://')
+					? NodeFilter.FILTER_ACCEPT
+					: NodeFilter.FILTER_REJECT;
+			},
+		});
+
+		let textNode: Text | null;
+		while ((textNode = treeWalker.nextNode() as Text | null)) {
+			const text = textNode.textContent || '';
+			const matches = text.matchAll(RIFT_URI_REGEX);
+
+			for (const match of matches) {
+				const riftUri = match[0];
+				const startIndex = match.index!;
+				const endIndex = startIndex + riftUri.length;
+
+				// Create range for this match
+				const range = document.createRange();
+				range.setStart(textNode, startIndex);
+				range.setEnd(textNode, endIndex);
+
+				// Notify handler (isLink = false for text nodes)
+				this.options.onRiftUriFound!(textNode, riftUri, range, false);
+			}
+		}
 	}
 }
 
 /**
- * Utility function to find all Rift links in a page
+ * Utility function to find all Rift URIs in a page
+ * Returns an array of objects containing the node, URI, range, and whether it's a link
  */
-export function findRiftLinks(): HTMLAnchorElement[] {
-	return Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href^="rift://"]'));
+export function findRiftUris(): Array<{ node: Node; riftUri: string; range: Range; isLink: boolean }> {
+	const results: Array<{ node: Node; riftUri: string; range: Range; isLink: boolean }> = [];
+
+	// Find links
+	const links = document.querySelectorAll<HTMLAnchorElement>('a[href^="rift://"]');
+	links.forEach((link) => {
+		const href = link.getAttribute('href') || '';
+		const range = document.createRange();
+		range.selectNode(link);
+		results.push({ node: link, riftUri: href, range, isLink: true });
+	});
+
+	// Find text URIs
+	const treeWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+		acceptNode: (node) => {
+			const parent = node.parentElement;
+			if (!parent) return NodeFilter.FILTER_REJECT;
+
+			if (
+				parent.tagName === 'SCRIPT' ||
+				parent.tagName === 'STYLE' ||
+				(parent.tagName === 'A' && parent.getAttribute('href')?.startsWith(RIFT_URI_SCHEME))
+			) {
+				return NodeFilter.FILTER_REJECT;
+			}
+
+			return node.textContent && node.textContent.includes('rift://')
+				? NodeFilter.FILTER_ACCEPT
+				: NodeFilter.FILTER_REJECT;
+		},
+	});
+
+	let textNode: Text | null;
+	while ((textNode = treeWalker.nextNode() as Text | null)) {
+		const text = textNode.textContent || '';
+		const matches = text.matchAll(RIFT_URI_REGEX);
+
+		for (const match of matches) {
+			const riftUri = match[0];
+			const startIndex = match.index!;
+			const endIndex = startIndex + riftUri.length;
+
+			const range = document.createRange();
+			range.setStart(textNode, startIndex);
+			range.setEnd(textNode, endIndex);
+
+			results.push({ node: textNode, riftUri, range, isLink: false });
+		}
+	}
+
+	return results;
 }

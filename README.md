@@ -6,7 +6,7 @@ It enables iframe-based widgets (called **Rift Frames**) to securely communicate
 
 ## 🌐 What Is a Rift Frame?
 
-A **Rift Frame** is a secure, sandboxed iframe injected into any webpage via a `rift://` link.
+A **Rift Frame** is a secure, sandboxed iframe injected into any webpage via a `rift://` URI.
 
 - Hosts a developer-controlled UI (like minting, voting, claiming, mini-games)
 - Rendered by wallets like Harpoon 🪝
@@ -16,7 +16,7 @@ A **Rift Frame** is a secure, sandboxed iframe injected into any webpage via a `
   - Submit Flow transactions
   - Execute read-only Cadence scripts
 
-Share `rift://` links anywhere (tweets, blogs, sites). If the user has Harpoon installed, it will recognize and render the interaction securely in-place.
+Share `rift://` URIs anywhere (tweets, blogs, sites). If the user has Harpoon installed, it will recognize and render the interaction securely in-place.
 
 ## 🗂 Project Structure
 
@@ -88,28 +88,31 @@ rift.on('error', (err) => alert(err.message));
 
 ## 🔧 How to Use `rift-js` in a Wallet
 
-Wallet developers need to detect Rift links and handle communication with widgets:
+Wallet developers need to detect Rift URIs and handle communication with widgets:
 
 ```ts
 import { wallet } from 'rift-js';
 
-// Create a detector to find Rift links in the page
+// Create a detector to find Rift URIs in the page (both in links and plain text)
 const detector = new wallet.RiftDetector({
-	onRiftLinkFound: (element, riftUrl) => {
-		// Handle the link (e.g., ask user for permission)
-		handleRiftLink(element, riftUrl);
+	onRiftUriFound: (node, riftUrl, range, isLink) => {
+		// Handle the URI (e.g., ask user for permission)
+		handleRiftUri(node, riftUrl, range, isLink);
 	}
 });
 
-// Start scanning for Rift links
+// Start scanning for Rift URIs
 detector.start();
 
-// Create an injector to replace links with iframes
+// Create an injector to replace URIs with iframes
 const injector = new wallet.IframeInjector();
 
-function handleRiftLink(element, riftUrl) {
+function handleRiftUri(node, riftUrl, range, isLink) {
+	// Get the parent element for replacement
+	const targetElement = isLink ? node : range.commonAncestorContainer.parentElement;
+	
 	// Inject the iframe
-	const iframe = injector.injectFrame(element, riftUrl);
+	const iframe = injector.injectFrame(targetElement, riftUrl);
 	
 	// Set up message handling for this iframe
 	if (iframe) {
@@ -175,9 +178,9 @@ function setupMessageHandler(iframe) {
 ## 🔁 Lifecycle of a Rift Frame
 
 ```text
-User opens a page containing a rift:// link
+User opens a page containing a rift:// URI (in link or plain text)
         ↓
-Harpoon detects the link and prompts for approval
+Harpoon detects the URI and prompts for approval
         ↓
 User approves
         ↓
@@ -250,9 +253,9 @@ The `EventEmitter` provides a simple event system for:
 - Error handling
 - Context updates
 
-#### 3. Link Detection
+#### 3. URI Detection
 
-The `RiftDetector` helps with finding `rift://` links in webpages and can automatically convert them to `https://` URLs.
+The `RiftDetector` helps with finding `rift://` URIs in webpages - both in hyperlinks and in plain text content - and can automatically convert them to `https://` URLs.
 
 #### 4. Iframe Injection
 
@@ -336,18 +339,34 @@ async function setupEventHandlers() {
 }
 ```
 
-#### Link Detection
+#### URI Detection
 
 ```ts
 import { RiftDetector } from 'rift-js';
 
 const detector = new RiftDetector({
-	onRiftLinkFound: (element, riftUrl) => {
-		console.log('Found Rift link:', riftUrl);
-	},
+	onRiftUriFound: (node, riftUrl, range, isLink) => {
+		console.log(`Found Rift URI: ${riftUrl}`);
+		console.log(`Is link: ${isLink}`);
+		
+		// For text nodes, you can create clickable elements
+		if (!isLink) {
+			const wrapper = document.createElement('span');
+			wrapper.className = 'rift-uri-highlight';
+			range.surroundContents(wrapper);
+			
+			wrapper.addEventListener('click', () => {
+				console.log('Text URI clicked:', riftUrl);
+			});
+		}
+	}
 });
 
 detector.start();
+
+// Find all URIs at once
+const allRiftUris = findRiftUris();
+console.log(`Found ${allRiftUris.length} Rift URIs on the page`);
 ```
 
 #### Iframe Injection
@@ -363,9 +382,18 @@ const injector = new IframeInjector({
 });
 
 const detector = new RiftDetector({
-	onRiftLinkFound: (element, riftUrl) => {
-		injector.injectFrame(element, riftUrl);
-	},
+	onRiftUriFound: (node, riftUrl, range, isLink) => {
+		// For links, use the link element directly
+		if (isLink) {
+			injector.injectFrame(node, riftUrl);
+		} 
+		// For text URIs, create a container at that position
+		else {
+			const container = document.createElement('div');
+			range.surroundContents(container);
+			injector.injectFrame(container, riftUrl);
+		}
+	}
 });
 
 detector.start();
