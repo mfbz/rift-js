@@ -15,9 +15,9 @@ export const ERROR_CODES = {
 
 // URI scheme
 export const RIFT_URI_SCHEME = 'rift://';
-export const RIFT_HTTPS_PREFIX = 'https://';
 
-// HTTP prefix for development
+// Rift URL conversion prefixes
+export const RIFT_HTTPS_PREFIX = 'https://';
 export const RIFT_HTTP_PREFIX = 'http://';
 
 // Event channels
