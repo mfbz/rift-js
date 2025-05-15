@@ -52,11 +52,8 @@ npm add rift-js
 ### 🔗 Connect & Submit a Transaction
 
 ```ts
-// Import from the root namespace (shortcut to widget.rift)
+// Import from the root namespace
 import { rift } from 'rift-js';
-
-// Or import from the widget namespace explicitly
-// import { rift } from 'rift-js/widget';
 
 const instance = await rift();
 console.log('Connected address:', await instance.getUserAddress());
@@ -93,7 +90,7 @@ Wallet developers need to detect Rift URIs and handle communication with widgets
 ```ts
 import { wallet } from 'rift-js';
 
-// Create a detector to find Rift URIs in the page (both in links and plain text)
+// Create a detector to find Rift URIs in the page text content
 const detector = new wallet.RiftDetector({
 	onRiftUriFound: (node, riftUrl, range) => {
 		// Handle the URI (e.g., ask user for permission)
@@ -217,6 +214,10 @@ rift.on('error', (err) => {
 | `wallet_unavailable` | Wallet extension not detected  |
 | `timeout`            | No response from wallet bridge |
 | `invalid_payload`    | Cadence or args were malformed |
+| `connection_error`   | Failed to connect to wallet    |
+| `not_initialized`    | SDK not properly initialized   |
+| `unknown_error`      | Unexpected error occurred      |
+| `not_supported`      | Feature not supported          |
 
 ## 🌍 rift:// URI Format
 
@@ -442,36 +443,18 @@ Communication between the iframe and wallet happens through `postMessage`:
 }
 ```
 
-## 🛡 Trusted Domains and Metadata
-
-For auto-approval and branded UX, add `.well-known/rift.json`:
-
-```json
-{
-	"name": "My DApp",
-	"icon": "https://example.com/icon.png",
-	"version": "1.0.0",
-	"publicKey": "..."
-}
-```
-
-Used for:
-
-- Icon rendering
-- Trust and verification
-- Domain allowlisting
-
 ## 🧪 Local Testing
 
 1. Start the example widget:
 
 ```bash
-cd widgets/hello-world
+cd starters/react-starter
 npm install
 npm run dev
+npm run open:test-rift
 ```
 
-2. Open a test page with inside:
+2. It will open the test-rift page linking to react-starter url:
 
 ```html
 rift://localhost:5173
@@ -502,14 +485,6 @@ We welcome contributions!
 2. Create a new branch
 3. Implement changes or additions
 4. Open a pull request with context
-
-### Dev Workflow
-
-```bash
-npm install
-npm run build
-npm run dev:widget
-```
 
 ## 📄 License
 

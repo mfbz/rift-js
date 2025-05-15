@@ -7,7 +7,7 @@
 At its core:
 
 - A **Rift** is a URI using the `rift://` scheme pointing to a hosted iframe UI.
-- **Harpoon Wallet** detects these URIs in webpages (both in links and plain text), prompts the user, and injects the iframe.
+- **Harpoon Wallet** detects these URIs in webpage text content, prompts the user, and injects the iframe.
 - A shared JavaScript SDK (**rift-js**) handles the communication between the injected iframe and the wallet.
 
 This system provides a seamless way to embed blockchain actions into any digital context, tweets, blogs, websites, or social bios, requiring no native dapp integration.
@@ -137,12 +137,9 @@ Communication occurs over `window.postMessage`:
 
 Harpoon, as the first Rift-compatible wallet, must:
 
-- Detect `rift://` URIs on any visited page (in links and plain text)
+- Detect `rift://` URIs on any visited page in text content
 - Parse and inject iframe URL (`rift://foo.com/path` → `https://foo.com/path`)
-- Prompt the user:
-
-  > "🪝 Harpoon detected a 🌀 Rift from foo.com, Inject it?"
-
+- Prompt the user
 - On approval:
   - Inject the iframe using a secured `sandbox` setup
   - Inject `window.rift` bridge to communicate with the iframe
@@ -164,36 +161,6 @@ const result = await rift.submitTransaction({ ... });
 6. User signs tx via Harpoon popup
 7. Result passed back into the iframe via `rift:mutateResult`
 
-## Trusted Injection Domains
-
-Harpoon supports an allowlist system to:
-
-- Auto-inject from trusted domains
-- Cache prior approvals
-- Display warnings for unrecognized domains
-
-To become a trusted domain:
-
-- Host a `.well-known/rift.json` with domain info and optional wallet pubkey
-
-## Sample `.well-known/rift.json`
-
-```json
-{
-	"name": "QuizDApp",
-	"icon": "https://quiz.mydapp.com/icon.png",
-	"publicKey": "...",
-	"version": "1.0.0"
-}
-```
-
-## Testing Rifts
-
-To test locally:
-
-- Host your frame UI at `https://localhost:3000/iframe.html`
-- Share `rift://localhost:3000/iframe.html`
-- Open a page with that URI and have Harpoon injected
 
 ## Critical Considerations & Limitations
 
@@ -241,7 +208,6 @@ Although Rift Protocol is highly buildable and modern browser-compatible, there 
 
 - Harpoon prompts the user before injecting any new origin
 - Users can "Always trust" or "Deny" domains
-- Wallet may check `/.well-known/rift.json` to validate Rift identity
 - Optionally implement a public Rift Provider Registry
 
 ### Mobile Limitations
@@ -279,8 +245,44 @@ Although Rift Protocol is highly buildable and modern browser-compatible, there 
 - Throttle scanning during rapid page updates
 - Only process text nodes that contain "rift://" substring
 
+## Error Handling
+
+When using the Rift protocol, developers should be prepared to handle various error scenarios:
+
+### Common Error Codes
+
+| Code                 | Description                    |
+| -------------------- | ------------------------------ |
+| `user_rejected`      | User denied the action         |
+| `wallet_unavailable` | Wallet extension not detected  |
+| `timeout`            | No response from wallet bridge |
+| `invalid_payload`    | Cadence or args were malformed |
+| `connection_error`   | Failed to connect to wallet    |
+| `not_initialized`    | SDK not properly initialized   |
+| `unknown_error`      | Unexpected error occurred      |
+| `not_supported`      | Feature not supported          |
+
+### Error Handling Example
+
+```ts
+rift.on('error', (err) => {
+  console.error(`Error (${err.code}): ${err.message}`);
+  
+  switch(err.code) {
+    case 'user_rejected':
+      // Handle user rejection
+      break;
+    case 'wallet_unavailable':
+      // Suggest wallet installation
+      break;
+    default:
+      // General error handling
+  }
+});
+```
+
 ## Summary
 
 - **Rift Protocol** turns any web page into a canvas for on-chain actions
-- **Harpoon Wallet** listens for `rift://` URIs (in links or text) and injects secure iframes
+- **Harpoon Wallet** listens for `rift://` URIs in text content and injects secure iframes
 - **rift-js** gives developers full access to wallet functions from inside the iframe
