@@ -58,6 +58,26 @@ const RIFT_URI_REGEX =
  * Detector class for finding Rift protocol URIs in a webpage in text nodes.
  * The detector can find multiple Rift URIs even when they appear in the same text node,
  * whether they're on the same line or separated by newlines.
+ *
+ * It processes URIs in reverse order (last to first) within each text node to handle
+ * DOM modifications that might occur when a URI is found and replaced with an iframe.
+ *
+ * Example usage with injector:
+ * ```ts
+ * const injector = new IframeInjector();
+ * const detector = new RiftDetector({
+ *   onRiftUriFound: (node, riftUrl, range) => {
+ *     // Create container element at the location of the URI
+ *     const container = document.createElement('div');
+ *     range.surroundContents(container);
+ *
+ *     // Inject the iframe in place of the URI text
+ *     injector.injectFrame(container, riftUrl);
+ *   }
+ * });
+ *
+ * detector.start();
+ * ```
  */
 export class RiftDetector {
 	private options: RiftDetectorOptions;
@@ -160,6 +180,9 @@ export class RiftDetector {
 		if (!this.options.onRiftUriFound) return;
 
 		const rootElement = this.options.rootElement || document.body;
+
+		// Collect all text nodes first before processing
+		const textNodesToProcess: Text[] = [];
 		const treeWalker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT, {
 			acceptNode: (node) => {
 				// Skip text nodes that are in script, style
@@ -177,47 +200,61 @@ export class RiftDetector {
 			},
 		});
 
+		// First collect all text nodes with rift URIs
 		let textNode: Text | null;
 		while ((textNode = treeWalker.nextNode() as Text | null)) {
-			const text = textNode.textContent || '';
+			textNodesToProcess.push(textNode);
+		}
 
-			// Get or create a set of processed URIs for this text node
-			let processedUris = this.processedTextNodes.get(textNode);
-			if (!processedUris) {
-				processedUris = new Set<string>();
-				this.processedTextNodes.set(textNode, processedUris);
+		// Now, for each text node, find all rift URIs and process them
+		// We do this for the entire node at once before moving to the next node
+		for (const node of textNodesToProcess) {
+			// Skip nodes that might have been removed from the DOM
+			if (!node.parentNode) continue;
+
+			// Make a copy of the text content to work with, since the original text node
+			// might be modified during processing
+			const text = node.textContent || '';
+
+			// Collect all matches from the text before we start modifying the DOM
+			const matches: Array<{ uri: string; startIndex: number; endIndex: number }> = [];
+
+			let match;
+			RIFT_URI_REGEX.lastIndex = 0;
+			while ((match = RIFT_URI_REGEX.exec(text)) !== null) {
+				matches.push({
+					uri: match[0],
+					startIndex: match.index,
+					endIndex: match.index + match[0].length,
+				});
 			}
 
-			// Find all matches in the text
-			let match;
-			// Reset lastIndex to ensure we start from the beginning
-			RIFT_URI_REGEX.lastIndex = 0;
+			// Process matches in reverse order (from end to start)
+			// This way, the indices remain valid even after DOM modifications
+			for (let i = matches.length - 1; i >= 0; i--) {
+				const { uri, startIndex, endIndex } = matches[i];
 
-			// We use exec in a loop to find all matches, which handles both
-			// multiple URIs on the same line and URIs separated by newlines
-			while ((match = RIFT_URI_REGEX.exec(text)) !== null) {
-				const riftUri = match[0];
-				const startIndex = match.index;
-				const endIndex = startIndex + riftUri.length;
+				try {
+					// Create range for this match
+					const range = document.createRange();
+					range.setStart(node, startIndex);
+					range.setEnd(node, endIndex);
 
-				// Generate a unique key for this URI occurrence in this text node
-				const uriKey = `${riftUri}:${startIndex}`;
+					// Notify handler
+					this.options.onRiftUriFound!(node, uri, range);
 
-				// Skip if we've already processed this specific URI at this position
-				if (processedUris.has(uriKey)) {
-					continue;
+					// If we've processed a URI and the DOM has changed, we might need
+					// to get a reference to the current node again
+					if (!node.parentNode) {
+						console.log('Text node was removed from DOM during processing, stopping this node');
+						break;
+					}
+				} catch (error) {
+					console.error('Error processing Rift URI:', error);
+					console.log('Problematic URI:', uri, 'at indices', startIndex, endIndex);
+					console.log('Node text length:', (node.textContent || '').length);
+					// Continue with other matches
 				}
-
-				// Mark as processed
-				processedUris.add(uriKey);
-
-				// Create range for this match
-				const range = document.createRange();
-				range.setStart(textNode, startIndex);
-				range.setEnd(textNode, endIndex);
-
-				// Notify handler
-				this.options.onRiftUriFound!(textNode, riftUri, range);
 			}
 		}
 	}
@@ -241,27 +278,51 @@ export class RiftDetector {
 		}
 
 		const foundUris: string[] = [];
+
+		// Skip nodes that might have been removed from the DOM
+		if (!textNode.parentNode) return foundUris;
+
+		// Make a copy of the text content to work with
 		const text = textNode.textContent;
 
-		// Find all matches in the text
+		// Collect all matches from the text before we start modifying the DOM
+		const matches: Array<{ uri: string; startIndex: number; endIndex: number }> = [];
+
 		let match;
-		// Reset lastIndex to ensure we start from the beginning
 		RIFT_URI_REGEX.lastIndex = 0;
-
-		// We use exec in a loop to find all matches
 		while ((match = RIFT_URI_REGEX.exec(text)) !== null) {
-			const riftUri = match[0];
-			const startIndex = match.index;
-			const endIndex = startIndex + riftUri.length;
+			matches.push({
+				uri: match[0],
+				startIndex: match.index,
+				endIndex: match.index + match[0].length,
+			});
+			foundUris.push(match[0]);
+		}
 
-			// Create range for this match
-			const range = document.createRange();
-			range.setStart(textNode, startIndex);
-			range.setEnd(textNode, endIndex);
+		// Process matches in reverse order (from end to start)
+		// This way, the indices remain valid even after DOM modifications
+		for (let i = matches.length - 1; i >= 0; i--) {
+			const { uri, startIndex, endIndex } = matches[i];
 
-			// Notify handler
-			this.options.onRiftUriFound(textNode, riftUri, range);
-			foundUris.push(riftUri);
+			try {
+				// Create range for this match
+				const range = document.createRange();
+				range.setStart(textNode, startIndex);
+				range.setEnd(textNode, endIndex);
+
+				// Notify handler
+				this.options.onRiftUriFound(textNode, uri, range);
+
+				// If we've processed a URI and the DOM has changed, we might need
+				// to get a reference to the current node again
+				if (!textNode.parentNode) {
+					console.log('Text node was removed from DOM during processing, stopping');
+					break;
+				}
+			} catch (error) {
+				console.error('Error processing Rift URI in scanNode:', error);
+				// Continue with other matches
+			}
 		}
 
 		return foundUris;
