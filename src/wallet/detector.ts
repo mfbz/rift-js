@@ -6,7 +6,8 @@ import { getProtocolPrefix } from './helpers';
  * Options for Rift URI detection
  */
 export interface RiftDetectorOptions {
-	/** Function to call when a Rift URI is found */
+	/** Function to call when a Rift URI is found - node is the text node containing the URI,
+	 * riftUrl is the complete URI including all query parameters, and range covers the exact text span */
 	onRiftUriFound?: (node: Node, riftUrl: string, range: Range) => void;
 	/** Only scan specific elements */
 	rootElement?: HTMLElement;
@@ -47,9 +48,10 @@ export function convertRiftUrl(url: string): string {
 
 /**
  * Regular expression to find rift:// URIs in text
- * Matches rift:// followed by domain and optional path/query parameters
+ * Matches rift:// followed by domain, optional path, and all query parameters including rift-specific ones
  */
-const RIFT_URI_REGEX = /(rift:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*[a-zA-Z0-9](?::\d+)?(?:\/[-a-zA-Z0-9()@:%_\+.~#?&//=]*)?)/g;
+const RIFT_URI_REGEX =
+	/(rift:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*[a-zA-Z0-9](?::\d+)?(?:\/[-a-zA-Z0-9()@:%_\+.~#?&//=]*)?(?:\?[-a-zA-Z0-9()@:%_\+.~#?&//=]*)?)/g;
 
 /**
  * Detector class for finding Rift protocol URIs in a webpage in text nodes
