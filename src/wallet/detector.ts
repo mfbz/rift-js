@@ -84,7 +84,6 @@ export class RiftDetector {
 	private observer: MutationObserver | null = null;
 	private scanTimeout: number | null = null;
 	private pendingScan = false;
-	private processedTextNodes = new WeakMap<Node, Set<string>>();
 
 	constructor(options: RiftDetectorOptions = {}) {
 		this.options = {
@@ -157,9 +156,6 @@ export class RiftDetector {
 			this.scanTimeout = null;
 			this.pendingScan = false;
 		}
-
-		// Clear the processed nodes cache
-		this.processedTextNodes = new WeakMap<Node, Set<string>>();
 	}
 
 	/**
@@ -264,7 +260,6 @@ export class RiftDetector {
 	 */
 	public reset(): void {
 		this.stop();
-		this.processedTextNodes = new WeakMap<Node, Set<string>>();
 	}
 
 	/**
