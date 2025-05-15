@@ -22,25 +22,25 @@ body {
   width: 100%;
 }
 
-.rift-widget {
+.rift-frame {
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 20px;
   background-color: #f5f5f5;
 }
 
-.rift-widget h1 {
+.rift-frame h1 {
   color: #4f46e5;
   font-size: 1.5rem;
   margin-bottom: 1rem;
 }
 
-.rift-widget h2 {
+.rift-frame h2 {
   font-size: 1.2rem;
   margin: 1rem 0 0.5rem;
 }
 
-.rift-widget .address {
+.rift-frame .address {
   font-family: monospace;
   background-color: #eee;
   padding: 0.5rem;
@@ -48,7 +48,7 @@ body {
   word-break: break-all;
 }
 
-.rift-widget button {
+.rift-frame button {
   background-color: #4f46e5;
   color: white;
   border: none;
@@ -59,11 +59,11 @@ body {
   transition: background-color 0.2s;
 }
 
-.rift-widget button:hover {
+.rift-frame button:hover {
   background-color: #4338ca;
 }
 
-.rift-widget .result {
+.rift-frame .result {
   background-color: #e0e7ff;
   padding: 1rem;
   border-radius: 4px;
@@ -71,7 +71,7 @@ body {
   overflow-wrap: anywhere;
 }
 
-.rift-widget .error {
+.rift-frame .error {
   background-color: #fee2e2;
   color: #b91c1c;
   padding: 1rem;

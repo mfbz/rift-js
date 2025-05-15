@@ -86,7 +86,7 @@ function App() {
   }
 
   return (
-    <div className="rift-widget">
+    <div className="rift-frame">
       <h1>Rift React Starter</h1>
       
       {isLoading ? (

@@ -2,7 +2,7 @@
 
 `rift-js` is the official JavaScript/TypeScript SDK and documentation hub for the Rift Protocol, a lightweight, embeddable Web3 action framework.
 
-It enables iframe-based widgets (called **Rift Frames**) to securely communicate with Rift-compatible wallets (like **Harpoon 🪝**) to perform Flow blockchain interactions.
+It enables iframe-based components (called **Rift Frames**) to securely communicate with Rift-compatible wallets (like **Harpoon 🪝**) to perform Flow blockchain interactions.
 
 ## 🌐 What Is a Rift Frame?
 
@@ -25,7 +25,6 @@ rift-js/
 ├── src/                    # SDK source (TypeScript)
 ├── tests/                  # Library tests
 ├── dist/                   # Compiled output from Rollup
-├── examples/               # Example Rift Frame widgets
 ├── docs/                   # Protocol documentation
 ├── rollup.config.js        # Build config
 ├── tsconfig.json
@@ -41,13 +40,13 @@ npm install
 npm run build
 ```
 
-To use in a widget:
+To use in a frame:
 
 ```bash
 npm add rift-js
 ```
 
-## 🔧 How to Use `rift-js` in a Widget
+## 🔧 How to Use `rift-js` in a Frame
 
 ### 🔗 Connect & Submit a Transaction
 
@@ -85,7 +84,7 @@ rift.on('error', (err) => alert(err.message));
 
 ## 🔧 How to Use `rift-js` in a Wallet
 
-Wallet developers need to detect Rift URIs and handle communication with widgets:
+Wallet developers need to detect Rift URIs and handle communication with Rift Frames:
 
 ```ts
 import { wallet } from 'rift-js';
@@ -183,17 +182,17 @@ User approves
         ↓
 Harpoon injects a secure iframe
         ↓
-Rift widget loads and calls rift()
+Rift Frame loads and calls rift()
         ↓
 Handshake via postMessage
         ↓
 Harpoon responds with address and network context
         ↓
-Widget triggers tx or script intent
+Frame triggers tx or script intent
         ↓
 Harpoon signs, submits, or evaluates
         ↓
-Widget receives result or error event
+Frame receives result or error event
 ```
 
 ## 🧠 Error Handling
@@ -445,7 +444,7 @@ Communication between the iframe and wallet happens through `postMessage`:
 
 ## 🧪 Local Testing
 
-1. Start the example widget:
+1. Start the example frame:
 
 ```bash
 cd starters/react-starter

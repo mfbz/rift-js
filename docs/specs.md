@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Rift Protocol** enables secure, embeddable, on-chain Web3 interactions using **iframe-based widgets** injected directly into webpages by a Rift-compatible wallet (like **Harpoon**).
+**Rift Protocol** enables secure, embeddable, on-chain Web3 interactions using **iframe-based components** injected directly into webpages by a Rift-compatible wallet (like **Harpoon**).
 
 At its core:
 
@@ -14,7 +14,7 @@ This system provides a seamless way to embed blockchain actions into any digital
 
 ## How It Works
 
-1. A developer hosts a UI widget at a public HTTPS URL.
+1. A developer hosts a Rift Frame at a public HTTPS URL.
 2. The developer shares a `rift://` URI (like in a tweet or on their site or in any webpage).
 3. When a user with **Harpoon Wallet** visits a page containing that URI:
    - Harpoon detects it in text content
@@ -103,11 +103,11 @@ rift.on('tx:success', (txId) => showSuccess(txId));
 rift.on('error', (err) => console.error(err));
 ```
 
-## Iframe-to-Wallet Messaging (Internal Spec)
+## Frame-to-Wallet Messaging (Internal Spec)
 
 Communication occurs over `window.postMessage`:
 
-### Iframe → Wallet
+### Frame → Wallet
 
 ```
 {
@@ -118,7 +118,7 @@ Communication occurs over `window.postMessage`:
 }
 ```
 
-### Wallet → Iframe
+### Wallet → Frame
 
 ```
 {
@@ -147,11 +147,11 @@ Harpoon, as the first Rift-compatible wallet, must:
 
 ## Example Use Case
 
-1. Dev hosts widget at <https://quiz.mydapp.com>
+1. Dev hosts Rift Frame at <https://quiz.mydapp.com>
 2. Dev shares `rift://quiz.mydapp.com` in a tweet as text
 3. User sees the URI in a tweet or on a site
 4. Harpoon sees the URI → injects the iframe (after approval)
-5. Iframe UI calls:
+5. Frame UI calls:
 
 ```tsx
 const rift = await rift();
@@ -161,14 +161,13 @@ const result = await rift.submitTransaction({ ... });
 6. User signs tx via Harpoon popup
 7. Result passed back into the iframe via `rift:mutateResult`
 
-
 ## Critical Considerations & Limitations
 
 Although Rift Protocol is highly buildable and modern browser-compatible, there are important technical and security considerations to be aware of when building or integrating with `rift://`-based workflows.
 
-### Iframe Sandboxing
+### Frame Sandboxing
 
-**Risk:** Iframes can be used to exfiltrate data, manipulate UX, or escape into parent context if not locked down.
+**Risk:** Frames can be used to exfiltrate data, manipulate UX, or escape into parent context if not locked down.
 
 **Solution:**
 
@@ -192,11 +191,11 @@ Although Rift Protocol is highly buildable and modern browser-compatible, there 
 
 ### CORS and Cross-Origin Access
 
-**Risk:** Iframes cannot directly call wallet APIs due to browser CORS policies.
+**Risk:** Frames cannot directly call wallet APIs due to browser CORS policies.
 
 **Solution:**
 
-- Iframes should **not call Harpoon APIs directly**
+- Frames should **not call Harpoon APIs directly**
 - Use `rift-js` which wraps postMessage-based RPC
 - Wallet should not expose HTTP endpoints, all comms go through message channel
 
