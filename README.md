@@ -232,6 +232,25 @@ Injected as:
 <iframe src="https://domain.com/path?query=value" sandbox="..." />
 ```
 
+### Frame Customization
+
+You can customize how your Rift Frame appears using special parameters with the `rift-` prefix:
+
+#### Frame Height
+
+Control the height of your Rift Frame using the `rift-height` parameter:
+
+```
+rift://app.example.com/mint?rift-height=tall&tokenId=123
+```
+
+Available height presets:
+- `compact` (200px) - For simple confirmations or minimal UI
+- `standard` (350px) - Default size for most interactions  
+- `tall` (500px) - For complex interfaces like NFT minting
+
+The Frame itself will receive only the application parameters (like `tokenId=123`), while the wallet handles the Rift-specific parameters.
+
 ## 🔐 Protocol Implementation
 
 ### Core Concepts

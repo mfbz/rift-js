@@ -1,5 +1,30 @@
 import { RIFT_URI_SCHEME } from '../constants';
 import { convertRiftUrl } from './detector';
+import { parseRiftUri } from '../utils';
+
+/**
+ * Height presets for Rift Frames
+ */
+export enum FrameHeightPreset {
+	COMPACT = 'compact', // Minimal interactions
+	STANDARD = 'standard', // Default experience
+	TALL = 'tall', // Complex interactions
+}
+
+/**
+ * Get frame height based on preset
+ */
+export function getFrameHeight(preset: string | undefined): string {
+	switch (preset) {
+		case FrameHeightPreset.COMPACT:
+			return '200px';
+		case FrameHeightPreset.TALL:
+			return '500px';
+		case FrameHeightPreset.STANDARD:
+		default:
+			return '350px';
+	}
+}
 
 /**
  * Options for the iframe injector
@@ -43,7 +68,7 @@ export class IframeInjector {
 	constructor(options: IframeInjectorOptions = {}) {
 		this.options = {
 			defaultWidth: '100%',
-			defaultHeight: '300px',
+			defaultHeight: getFrameHeight(FrameHeightPreset.STANDARD),
 			sandboxAttributes: DEFAULT_SANDBOX,
 			...options,
 		};
@@ -73,6 +98,9 @@ export class IframeInjector {
 			return this.injectedFrames.get(element) || null;
 		}
 
+		// Parse Rift URL to extract parameters
+		const parsedRiftUrl = parseRiftUri(riftUrl);
+
 		// Convert Rift URL to HTTPS URL
 		const iframeUrl = riftUrl.startsWith(RIFT_URI_SCHEME) ? convertRiftUrl(riftUrl) : riftUrl;
 
@@ -80,7 +108,14 @@ export class IframeInjector {
 		const iframe = document.createElement('iframe');
 		iframe.src = iframeUrl;
 		iframe.width = this.options.defaultWidth || '100%';
-		iframe.height = this.options.defaultHeight || '300px';
+
+		// Apply height based on preset if available
+		if (parsedRiftUrl && parsedRiftUrl.riftParams.height) {
+			iframe.height = getFrameHeight(parsedRiftUrl.riftParams.height);
+		} else {
+			iframe.height = this.options.defaultHeight || getFrameHeight(FrameHeightPreset.STANDARD);
+		}
+
 		iframe.style.border = 'none';
 		iframe.sandbox.value = this.options.sandboxAttributes || DEFAULT_SANDBOX;
 		iframe.setAttribute('data-rift-frame', 'true');

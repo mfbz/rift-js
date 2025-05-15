@@ -53,7 +53,13 @@ export function normalizeError(error: unknown): { code: string; message: string 
 /**
  * Parse a Rift URI into its components
  */
-export function parseRiftUri(uri: string): { host: string; path: string; query: string } | null {
+export function parseRiftUri(uri: string): {
+	host: string;
+	path: string;
+	query: string;
+	riftParams: Record<string, string>;
+	appParams: Record<string, string>;
+} | null {
 	if (!uri.startsWith('rift://')) {
 		return null;
 	}
@@ -66,20 +72,54 @@ export function parseRiftUri(uri: string): { host: string; path: string; query: 
 	const host = hostEnd === -1 ? withoutPrefix : withoutPrefix.substring(0, hostEnd);
 
 	// Extract the path and query
+	let path = '';
+	let query = '';
+
 	if (hostEnd === -1) {
-		return { host, path: '', query: '' };
+		path = '';
+
+		// Check if there's a query in the host portion
+		const queryIndex = host.indexOf('?');
+		if (queryIndex !== -1) {
+			query = host.substring(queryIndex);
+		}
+	} else {
+		const pathAndQuery = withoutPrefix.substring(hostEnd);
+		const queryStart = pathAndQuery.indexOf('?');
+
+		if (queryStart === -1) {
+			path = pathAndQuery;
+			query = '';
+		} else {
+			path = pathAndQuery.substring(0, queryStart);
+			query = pathAndQuery.substring(queryStart);
+		}
 	}
 
-	const pathAndQuery = withoutPrefix.substring(hostEnd);
-	const queryStart = pathAndQuery.indexOf('?');
+	// Extract and separate rift-specific parameters from application parameters
+	const riftParams: Record<string, string> = {};
+	const appParams: Record<string, string> = {};
 
-	if (queryStart === -1) {
-		return { host, path: pathAndQuery, query: '' };
+	if (query && query.length > 1) {
+		// Remove the leading '?' character
+		const queryString = query.substring(1);
+		const searchParams = new URLSearchParams(queryString);
+
+		searchParams.forEach((value, key) => {
+			if (key.startsWith('rift-')) {
+				const riftKey = key.substring(5); // Remove 'rift-' prefix
+				riftParams[riftKey] = value;
+			} else {
+				appParams[key] = value;
+			}
+		});
 	}
 
 	return {
 		host,
-		path: pathAndQuery.substring(0, queryStart),
-		query: pathAndQuery.substring(queryStart),
+		path,
+		query,
+		riftParams,
+		appParams,
 	};
 }

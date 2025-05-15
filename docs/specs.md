@@ -46,6 +46,25 @@ rift://mydapp.com/rift/quiz?ref=abc
 - The wallet injects an iframe pointing to `https://mydapp.com/rift/quiz?ref=abc`
 - URIs can be detected in text content
 
+### Customizing Rift Frames
+
+Rift URIs support special parameters with the `rift-` prefix to customize how frames are displayed:
+
+#### Frame Height
+
+The `rift-height` parameter controls the height of the injected frame:
+
+```
+rift://mydapp.com/rift/quiz?rift-height=tall&ref=abc
+```
+
+Available height presets:
+- `compact` (200px) - For simple confirmations or minimal UI
+- `standard` (350px) - Default size for most interactions (used if no height is specified)
+- `tall` (500px) - For complex interfaces like NFT minting
+
+**Note:** Parameters with the `rift-` prefix are processed by the wallet and not passed to the frame URL.
+
 ## URI Detection
 
 Harpoon detects `rift://` URIs in text content:
@@ -148,9 +167,9 @@ Harpoon, as the first Rift-compatible wallet, must:
 ## Example Use Case
 
 1. Dev hosts Rift Frame at <https://quiz.mydapp.com>
-2. Dev shares `rift://quiz.mydapp.com` in a tweet as text
+2. Dev shares `rift://quiz.mydapp.com?rift-height=tall` in a tweet as text
 3. User sees the URI in a tweet or on a site
-4. Harpoon sees the URI → injects the iframe (after approval)
+4. Harpoon sees the URI → injects the iframe with height=500px (after approval)
 5. Frame UI calls:
 
 ```tsx

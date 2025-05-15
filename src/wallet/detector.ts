@@ -28,7 +28,21 @@ export function convertRiftUrl(url: string): string {
 	}
 
 	const prefix = getProtocolPrefix(parsed.host);
-	return `${prefix}${parsed.host}${parsed.path}${parsed.query}`;
+
+	// Create clean URL without rift-specific parameters
+	let cleanUrl = `${prefix}${parsed.host}${parsed.path}`;
+
+	// Add application parameters if any exist
+	const appParamsEntries = Object.entries(parsed.appParams);
+	if (appParamsEntries.length > 0) {
+		const searchParams = new URLSearchParams();
+		appParamsEntries.forEach(([key, value]) => {
+			searchParams.append(key, value);
+		});
+		cleanUrl += `?${searchParams.toString()}`;
+	}
+
+	return cleanUrl;
 }
 
 /**
