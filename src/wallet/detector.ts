@@ -49,18 +49,22 @@ export function convertRiftUrl(url: string): string {
 /**
  * Regular expression to find rift:// URIs in text
  * Matches rift:// followed by domain, optional path, and all query parameters including rift-specific ones
+ * The global flag ensures we find all instances in a text block
  */
 const RIFT_URI_REGEX =
 	/(rift:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*[a-zA-Z0-9](?::\d+)?(?:\/[-a-zA-Z0-9()@:%_\+.~#?&//=]*)?(?:\?[-a-zA-Z0-9()@:%_\+.~#?&//=]*)?)/g;
 
 /**
- * Detector class for finding Rift protocol URIs in a webpage in text nodes
+ * Detector class for finding Rift protocol URIs in a webpage in text nodes.
+ * The detector can find multiple Rift URIs even when they appear in the same text node,
+ * whether they're on the same line or separated by newlines.
  */
 export class RiftDetector {
 	private options: RiftDetectorOptions;
 	private observer: MutationObserver | null = null;
 	private scanTimeout: number | null = null;
 	private pendingScan = false;
+	private processedTextNodes = new WeakMap<Node, Set<string>>();
 
 	constructor(options: RiftDetectorOptions = {}) {
 		this.options = {
@@ -133,6 +137,9 @@ export class RiftDetector {
 			this.scanTimeout = null;
 			this.pendingScan = false;
 		}
+
+		// Clear the processed nodes cache
+		this.processedTextNodes = new WeakMap<Node, Set<string>>();
 	}
 
 	/**
@@ -173,12 +180,36 @@ export class RiftDetector {
 		let textNode: Text | null;
 		while ((textNode = treeWalker.nextNode() as Text | null)) {
 			const text = textNode.textContent || '';
-			const matches = text.matchAll(RIFT_URI_REGEX);
 
-			for (const match of matches) {
+			// Get or create a set of processed URIs for this text node
+			let processedUris = this.processedTextNodes.get(textNode);
+			if (!processedUris) {
+				processedUris = new Set<string>();
+				this.processedTextNodes.set(textNode, processedUris);
+			}
+
+			// Find all matches in the text
+			let match;
+			// Reset lastIndex to ensure we start from the beginning
+			RIFT_URI_REGEX.lastIndex = 0;
+
+			// We use exec in a loop to find all matches, which handles both
+			// multiple URIs on the same line and URIs separated by newlines
+			while ((match = RIFT_URI_REGEX.exec(text)) !== null) {
 				const riftUri = match[0];
-				const startIndex = match.index!;
+				const startIndex = match.index;
 				const endIndex = startIndex + riftUri.length;
+
+				// Generate a unique key for this URI occurrence in this text node
+				const uriKey = `${riftUri}:${startIndex}`;
+
+				// Skip if we've already processed this specific URI at this position
+				if (processedUris.has(uriKey)) {
+					continue;
+				}
+
+				// Mark as processed
+				processedUris.add(uriKey);
 
 				// Create range for this match
 				const range = document.createRange();
@@ -189,5 +220,50 @@ export class RiftDetector {
 				this.options.onRiftUriFound!(textNode, riftUri, range);
 			}
 		}
+	}
+
+	/**
+	 * Reset the detector's state, including processed nodes cache
+	 */
+	public reset(): void {
+		this.stop();
+		this.processedTextNodes = new WeakMap<Node, Set<string>>();
+	}
+
+	/**
+	 * Manually scan a specific text node for Rift URIs
+	 * @param textNode The text node to scan
+	 * @returns Array of found Rift URIs
+	 */
+	public scanNode(textNode: Text): string[] {
+		if (!this.options.onRiftUriFound || !textNode.textContent) {
+			return [];
+		}
+
+		const foundUris: string[] = [];
+		const text = textNode.textContent;
+
+		// Find all matches in the text
+		let match;
+		// Reset lastIndex to ensure we start from the beginning
+		RIFT_URI_REGEX.lastIndex = 0;
+
+		// We use exec in a loop to find all matches
+		while ((match = RIFT_URI_REGEX.exec(text)) !== null) {
+			const riftUri = match[0];
+			const startIndex = match.index;
+			const endIndex = startIndex + riftUri.length;
+
+			// Create range for this match
+			const range = document.createRange();
+			range.setStart(textNode, startIndex);
+			range.setEnd(textNode, endIndex);
+
+			// Notify handler
+			this.options.onRiftUriFound(textNode, riftUri, range);
+			foundUris.push(riftUri);
+		}
+
+		return foundUris;
 	}
 }
