@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+@layer components {
+  .rift-frame {
+    @apply w-full max-w-full rounded-xl border border-gray-200 p-4 md:p-6 shadow-sm;
+  }
+
+  .rift-address {
+    @apply p-2 rounded-lg bg-gray-100 text-gray-800 font-mono text-sm overflow-hidden text-ellipsis;
+  }
+
+  .rift-error {
+    @apply p-3 rounded-lg bg-red-50 text-red-700 mt-4;
+  }
+
+  .rift-result {
+    @apply p-3 rounded-lg bg-blue-50 text-blue-700 mt-2 font-mono text-sm break-all;
+  }
+
+  .rift-button {
+    @apply px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors mr-2 mb-2;
+  }
+
+  .rift-container {
+    @apply flex flex-col gap-4 items-start w-full;
+  }
+
+  .rift-loading {
+    @apply animate-spin h-5 w-5 border-2 border-t-transparent rounded-full;
+  }
+
+  .nft-placeholder {
+    @apply w-full aspect-square bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden;
+  }
+
+  .nft-card {
+    @apply min-w-[200px] w-[200px] rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col;
+  }
+
+  .nft-card-image {
+    @apply w-full aspect-square bg-gray-100 object-cover;
+  }
+}

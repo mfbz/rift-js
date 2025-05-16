@@ -10,8 +10,10 @@
 		"test": "jest",
 		"coverage": "jest --coverage",
 		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
-		"starter:dev": "cd starters/react-starter && npm install && npm run dev",
-		"starter:build": "cd starters/react-starter && npm install && npm run build",
+		"starter:react:dev": "cd starters/react-starter && npm install && npm run dev",
+		"starter:react:build": "cd starters/react-starter && npm install && npm run build",
+		"starter:next:dev": "cd starters/next-starter && npm install && npm run dev",
+		"starter:next:build": "cd starters/next-starter && npm install && npm run build",
 		"open:test-rift": "npx http-server -o /test-rift.html"
 	},
 	"dependencies": {},
