@@ -23,8 +23,7 @@ Share `rift://` URIs anywhere (tweets, blogs, sites). If the user has Harpoon in
 ```
 rift-js/
 ├── src/                    # SDK source (TypeScript)
-├── tests/                  # Library tests
-├── dist/                   # Compiled output from Rollup
+├── starters/               # Starter projects
 ├── docs/                   # Protocol documentation
 ├── rollup.config.js        # Build config
 ├── tsconfig.json
@@ -249,7 +248,13 @@ Available height presets:
 - `standard` (350px) - Default size for most interactions  
 - `tall` (500px) - For complex interfaces like NFT minting
 
-The Frame itself will receive only the application parameters (like `tokenId=123`), while the wallet handles the Rift-specific parameters.
+#### Frame Color
+
+Control the color of your Rift Frame using the `rift-color` parameter:
+
+```
+rift://app.example.com/mint?rift-color=4E71FF
+```
 
 ## 🔐 Protocol Implementation
 
@@ -466,19 +471,14 @@ Communication between the iframe and wallet happens through `postMessage`:
 1. Start the example frame:
 
 ```bash
-cd starters/react-starter
+cd starters/next-starter
 npm install
 npm run dev
 npm run open:test-rift
 ```
 
-2. It will open the test-rift page linking to react-starter url:
-
-```html
-rift://localhost:5173
-```
-
-3. Harpoon detects the link, injects the iframe, and connects.
+2. It will open the test-rift page linking to next-starter uris
+3. Harpoon detects the link, injects the iframe, and connects
 
 ### 📡 Using HTTP for Development
 
