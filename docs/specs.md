@@ -63,7 +63,13 @@ Available height presets:
 - `standard` (350px) - Default size for most interactions (used if no height is specified)
 - `tall` (500px) - For complex interfaces like NFT minting
 
-**Note:** Parameters with the `rift-` prefix are processed by the wallet and not passed to the frame URL.
+#### Frame Color
+
+Control the color of your Rift Frame using the `rift-color` parameter:
+
+```
+rift://app.example.com/mint?rift-color=4E71FF
+```
 
 ## URI Detection
 
@@ -161,7 +167,6 @@ Harpoon, as the first Rift-compatible wallet, must:
 - Prompt the user
 - On approval:
   - Inject the iframe using a secured `sandbox` setup
-  - Inject `window.rift` bridge to communicate with the iframe
   - Handle intent requests (tx signing, balance read, etc.)
 
 ## Example Use Case
@@ -169,7 +174,7 @@ Harpoon, as the first Rift-compatible wallet, must:
 1. Dev hosts Rift Frame at <https://quiz.mydapp.com>
 2. Dev shares `rift://quiz.mydapp.com?rift-height=tall` in a tweet as text
 3. User sees the URI in a tweet or on a site
-4. Harpoon sees the URI → injects the iframe with height=500px (after approval)
+4. Harpoon sees the URI → injects the iframe (after approval)
 5. Frame UI calls:
 
 ```tsx
