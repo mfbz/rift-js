@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRift } from '@/components/rift-provider';
 
 export default function NFTMinter() {
@@ -33,34 +32,33 @@ export default function NFTMinter() {
   };
 
   return (
-    <div className="rift-frame">
-      <div className="flex items-center mb-6">
-        <Link href="/" className="text-blue-600 hover:underline mr-4">
-          ← Back
-        </Link>
-        <h1 className="text-2xl font-bold">NFT Minter</h1>
-      </div>
-      
+    <div className="rift-frame bg-purple-700">
       <div className="rift-container">
         <div className="nft-placeholder w-full max-w-md mx-auto">
           {isMinted ? (
             <Image 
-              src="https://via.placeholder.com/500x500" 
+              src="/kitties/kitty-1.png" 
               alt="Minted NFT"
-              width={500}
-              height={500}
-              className="w-full h-full object-cover"
+              width={300}
+              height={300}
+              className="w-full h-full object-cover bg-purple-400"
             />
           ) : (
-            <div className="text-gray-400">NFT will appear here after minting</div>
+            <Image 
+              src="/kitties/egg.png" 
+              alt="Minted NFT Placeholder"
+              width={300}
+              height={300}
+              className="w-full h-full object-cover bg-purple-400"
+            />
           )}
         </div>
         
-        <div className="w-full max-w-md mx-auto mt-4">
+        <div className="w-full max-w-md mx-auto">
           <button 
             onClick={handleMint}
             disabled={isLoading || isMinted}
-            className={`rift-button w-full ${isMinted ? 'bg-green-600 hover:bg-green-700' : ''} ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`rift-button w-full cursor-pointer ${isMinted ? 'bg-lime-500' : 'bg-purple-500'} ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {isLoading ? (
               <div className="flex items-center justify-center">

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRift } from '@/components/rift-provider';
 
 type NFT = {
@@ -12,6 +11,7 @@ type NFT = {
   price: string;
   purchased: boolean;
   loading: boolean;
+  backgroundColor: string;
 }
 
 export default function NFTCarousel() {
@@ -19,11 +19,10 @@ export default function NFTCarousel() {
   
   // Mock NFT data
   const [nfts, setNfts] = useState<NFT[]>([
-    { id: 1, image: 'https://via.placeholder.com/200x200?text=NFT+1', name: 'Cosmic Explorer #1', price: '10', purchased: false, loading: false },
-    { id: 2, image: 'https://via.placeholder.com/200x200?text=NFT+2', name: 'Cosmic Explorer #2', price: '15', purchased: false, loading: false },
-    { id: 3, image: 'https://via.placeholder.com/200x200?text=NFT+3', name: 'Cosmic Explorer #3', price: '12', purchased: false, loading: false },
-    { id: 4, image: 'https://via.placeholder.com/200x200?text=NFT+4', name: 'Cosmic Explorer #4', price: '20', purchased: false, loading: false },
-    { id: 5, image: 'https://via.placeholder.com/200x200?text=NFT+5', name: 'Cosmic Explorer #5', price: '18', purchased: false, loading: false },
+    { id: 1, image: '/kitties/kitty-1.png', name: 'Ahman Lubfuzzle', price: '10', purchased: false, loading: false, backgroundColor: '#F49BAB' },
+    { id: 2, image: '/kitties/kitty-2.png', name: 'Chayim Poopsmookie', price: '15', purchased: false, loading: false, backgroundColor: '#FBF3C1' },
+    { id: 3, image: '/kitties/kitty-3.png', name: 'Guile Demonbest', price: '12', purchased: false, loading: false, backgroundColor: '#A8F1FF' },
+    { id: 4, image: '/kitties/kitty-4.png', name: 'Loki Zippycutie', price: '20', purchased: false, loading: false, backgroundColor: '#DDEB9D' },
   ]);
 
   const handleBuy = async (id: number) => {
@@ -62,13 +61,6 @@ export default function NFTCarousel() {
 
   return (
     <div className="rift-frame">
-      <div className="flex items-center mb-6">
-        <Link href="/" className="text-blue-600 hover:underline mr-4">
-          ← Back
-        </Link>
-        <h1 className="text-2xl font-bold">NFT Carousel</h1>
-      </div>
-      
       <div className="w-full overflow-x-auto pb-4">
         <div className="flex space-x-4 min-w-min">
           {nfts.map(nft => (
@@ -79,14 +71,15 @@ export default function NFTCarousel() {
                 width={200}
                 height={200}
                 className="nft-card-image"
+                style={{ backgroundColor: nft.backgroundColor }}
               />
-              <div className="p-3">
+              <div className="p-3 bg-white">
                 <h3 className="font-medium text-sm mb-1">{nft.name}</h3>
                 <p className="text-gray-600 text-sm mb-2">{nft.price} FLOW</p>
                 <button
                   onClick={() => !nft.purchased && !nft.loading && handleBuy(nft.id)}
                   disabled={nft.purchased || nft.loading}
-                  className={`w-full py-1.5 px-3 text-sm rounded-lg transition-colors ${
+                  className={`w-full py-1.5 px-3 text-sm rounded-4xl transition-colors ${
                     nft.purchased 
                       ? 'bg-green-600 text-white cursor-default' 
                       : nft.loading 

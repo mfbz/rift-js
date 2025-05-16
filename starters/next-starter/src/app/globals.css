@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --foreground-rgb: 0, 0, 0;
@@ -15,13 +13,12 @@
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+  color: #000;
 }
 
 @layer components {
   .rift-frame {
-    @apply w-full max-w-full rounded-xl border border-gray-200 p-4 md:p-6 shadow-sm;
+    @apply w-full max-w-full;
   }
 
   .rift-address {
@@ -37,7 +34,7 @@ body {
   }
 
   .rift-button {
-    @apply px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors mr-2 mb-2;
+    @apply px-4 py-2 rounded-4xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors mr-2 mb-2;
   }
 
   .rift-container {
@@ -49,14 +46,14 @@ body {
   }
 
   .nft-placeholder {
-    @apply w-full aspect-square bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden;
+    @apply w-full aspect-square bg-gray-200 rounded-4xl flex items-center justify-center overflow-hidden;
   }
 
   .nft-card {
-    @apply min-w-[200px] w-[200px] rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col;
+    @apply min-w-[200px] w-[200px] rounded-4xl border border-gray-200 overflow-hidden flex flex-col;
   }
 
   .nft-card-image {
-    @apply w-full aspect-square bg-gray-100 object-cover;
+    @apply w-full aspect-square bg-gray-200 object-cover;
   }
 }
