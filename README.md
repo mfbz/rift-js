@@ -18,6 +18,16 @@ A **Rift Frame** is a secure, sandboxed iframe injected into any webpage via a `
 
 Share `rift://` URIs anywhere (tweets, blogs, sites). If the user has Harpoon installed, it will recognize and render the interaction securely in-place.
 
+Here's some bonus rift frames for development:
+
+rift://localhost:3000?rift-color=4E71FF
+    
+rift://localhost:3000/nft-minter?rift-height=tall&rift-color=8200db
+
+rift://localhost:3000/nft-carousel?rift-height=standard
+
+rift://localhost:3000/token-buy?rift-height=compact&rift-color=00EF8B
+
 ## 🗂 Project Structure
 
 ```
