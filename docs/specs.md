@@ -2,27 +2,27 @@
 
 ## Overview
 
-**Rift Protocol** enables secure, embeddable, on-chain Web3 interactions using **iframe-based components** injected directly into webpages by a Rift-compatible wallet (like **Harpoon**).
+**Rift Protocol** enables secure, embeddable, onchain web3 interactions using **iframe-based components** injected directly into webpages by a Rift-compatible wallet.
 
 At its core:
 
 - A **Rift** is a URI using the `rift://` scheme pointing to a hosted iframe UI.
-- **Harpoon Wallet** detects these URIs in webpage text content, prompts the user, and injects the iframe.
-- A shared JavaScript SDK (**rift-js**) handles the communication between the injected iframe and the wallet.
+- A **Rift-compatible wallet** detects these URIs in webpage content and injects the container that manages Rift frame visibility.
+- A shared TypeScript SDK (**rift-js**) handles the communication between the injected iframe and the wallet.
 
-This system provides a seamless way to embed blockchain actions into any digital context, tweets, blogs, websites, or social bios, requiring no native dapp integration.
+The protocol provides a seamless way to embed mini dapps into any digital context, tweets, blogs, websites, or social bios, requiring no native integration.
 
 ## How It Works
 
 1. A developer hosts a Rift Frame at a public HTTPS URL.
 2. The developer shares a `rift://` URI (like in a tweet or on their site or in any webpage).
-3. When a user with **Harpoon Wallet** visits a page containing that URI:
-   - Harpoon detects it in text content
-   - Prompts the user
-   - Injects a **sandboxed iframe** pointing to that URL
+3. When a user with a Rift-compatible wallet visits a page containing that URI:
+   - The wallet detects it in text content
+   - It injects a container that manages Rift frame visibility and injection
 4. The iframe uses `rift-js` to automatically connect with the wallet
 5. It can then:
    - Retrieve the user's address
+   - Query the chain
    - Submit transactions
    - Display status updates, balances, etc.
 
@@ -73,7 +73,7 @@ rift://app.example.com/mint?rift-color=4E71FF
 
 ## URI Detection
 
-Harpoon detects `rift://` URIs in text content:
+The wallet detects `rift://` URIs in text content:
 
 - Any text node containing a `rift://` URI pattern is detected
 - This detection approach enables Rift URIs to work in tweets, posts, and messages
@@ -86,7 +86,7 @@ Harpoon detects `rift://` URIs in text content:
 - **All iframes are sandboxed**:
 
   ```html
-  sandbox="allow-scripts allow-forms allow-popups allow-downloads"
+  sandbox="allow-scripts allow-forms allow-popups allow-downloads allow-same-origin"
   ```
 
 - **CSP headers** are enforced to avoid iframe escape attempts
@@ -158,33 +158,6 @@ Communication occurs over `window.postMessage`:
 
 ```
 
-## Harpoon Wallet
-
-Harpoon, as the first Rift-compatible wallet, must:
-
-- Detect `rift://` URIs on any visited page in text content
-- Parse and inject iframe URL (`rift://foo.com/path` → `https://foo.com/path`)
-- Prompt the user
-- On approval:
-  - Inject the iframe using a secured `sandbox` setup
-  - Handle intent requests (tx signing, balance read, etc.)
-
-## Example Use Case
-
-1. Dev hosts Rift Frame at <https://quiz.mydapp.com>
-2. Dev shares `rift://quiz.mydapp.com?rift-height=tall` in a tweet as text
-3. User sees the URI in a tweet or on a site
-4. Harpoon sees the URI → injects the iframe (after approval)
-5. Frame UI calls:
-
-```tsx
-const rift = await rift();
-const result = await rift.submitTransaction({ ... });
-```
-
-6. User signs tx via Harpoon popup
-7. Result passed back into the iframe via `rift:mutateResult`
-
 ## Critical Considerations & Limitations
 
 Although Rift Protocol is highly buildable and modern browser-compatible, there are important technical and security considerations to be aware of when building or integrating with `rift://`-based workflows.
@@ -198,7 +171,7 @@ Although Rift Protocol is highly buildable and modern browser-compatible, there 
 - All injected Rifts are injected with an iframe with:
 
   ```html
-  sandbox="allow-scripts allow-forms allow-popups allow-downloads"
+  sandbox="allow-scripts allow-forms allow-popups allow-downloads allow-same-origin"
   ```
 
 - Disable access to `document.cookie`, `localStorage`, etc.
@@ -211,7 +184,7 @@ Although Rift Protocol is highly buildable and modern browser-compatible, there 
 **Solution:**
 
 - All `rift://` URIs must resolve to **`https://` URLs only**
-- Harpoon will reject or warn on insecure origins
+- The wallet will reject or warn on insecure origins
 
 ### CORS and Cross-Origin Access
 
@@ -219,7 +192,7 @@ Although Rift Protocol is highly buildable and modern browser-compatible, there 
 
 **Solution:**
 
-- Frames should **not call Harpoon APIs directly**
+- Frames should **not call wallet APIs directly**
 - Use `rift-js` which wraps postMessage-based RPC
 - Wallet should not expose HTTP endpoints, all comms go through message channel
 
@@ -229,20 +202,20 @@ Although Rift Protocol is highly buildable and modern browser-compatible, there 
 
 **Solution:**
 
-- Harpoon prompts the user before injecting any new origin
+- The wallet prompts the user before injecting any new origin
 - Users can "Always trust" or "Deny" domains
 - Optionally implement a public Rift Provider Registry
 
 ### Mobile Limitations
 
-**Risk:** Browser extensions like Harpoon are currently desktop-only
+**Risk:** Browser extensions and the protocol are currently desktop-only
 
 **Solution:**
 
 - Document as desktop-first protocol
 - Plan future mobile support via:
-  - `harpoon://` deep linking
-  - Native Harpoon app with embedded browser
+  - `wallet://` deep linking
+  - Native wallet app with embedded browser
 
 ### UX Safeguards
 
@@ -263,7 +236,7 @@ Although Rift Protocol is highly buildable and modern browser-compatible, there 
 
 **Solution:**
 
-- Use efficient tree traversal via browser's TreeWalker API
+- Use efficient tree traversal via browser's API
 - Implement smart filtering to skip script/style tags
 - Throttle scanning during rapid page updates
 - Only process text nodes that contain "rift://" substring
@@ -307,5 +280,5 @@ rift.on('error', (err) => {
 ## Summary
 
 - **Rift Protocol** turns any web page into a canvas for on-chain actions
-- **Harpoon Wallet** listens for `rift://` URIs in text content and injects secure iframes
+- **Rift-compatible Wallet** listens for `rift://` URIs in text content and injects secure iframes
 - **rift-js** gives developers full access to wallet functions from inside the iframe
