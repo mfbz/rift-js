@@ -16,6 +16,7 @@ A complete reference for embedding secure, onchain interactions inside any webpa
 | **rift‑js SDK**            | Lightweight TypeScript library running inside the frame and the wallet for handshake, RPC, and event hooks.                                 |
 | **Smart Download Link**    | A fallback `https://` link embedding a Rift URI, guiding users to install the wallet and resuming the original intent.       |
 | **Bridge**                 | The `window.postMessage` channel that carries JSON‑RPC messages between wallet and frame.                                    |
+| **Rift Registry**          | A curated list of verified Rift Frame domains that display a checkmark badge for enhanced user trust and security.           |
 
 ## How It Works
 
@@ -94,6 +95,33 @@ Set via `?rift-color=4E71FF` (hex RGB).
 | Phishing via untrusted domains | Frame must be manually injected by user with confirmation. Trusted origins may be allow‑listed.                             |
 | Mixed‑content blocking         | `rift://` **must** resolve to `https://`.                                                             |
 | Direct wallet API calls        | All communication is over `window.postMessage`; wallet exposes no HTTP endpoints.                     |
+| Malicious frame impersonation  | Registry-based verification system displays checkmark badges for approved domains.                     |
+
+### Registry-Based Verification
+
+To enhance user trust and security, Rift-compatible wallets maintain a curated **Rift Registry** of verified domains. When a frame is loaded from a verified domain:
+
+- A **✓ Verified** checkmark badge appears next to the frame
+- Users can easily identify trusted applications
+- Registry inclusion requires security audit and community approval
+- Verified frames get streamlined injection (reduced confirmation steps)
+
+**Verification Criteria:**
+- Open-source codebase with security audit
+- Established developer reputation
+- Community governance approval
+- Adherence to Rift security best practices
+
+**User Experience:**
+```
+┌─────────────────────────────────┐
+│ ✓ Verified │ MyDApp Quiz Frame  │ ← Checkmark for registry domains
+└─────────────────────────────────┘
+vs.
+┌─────────────────────────────────┐
+│ ⚠️ Unverified │ Unknown Frame   │ ← Warning for non-registry domains  
+└─────────────────────────────────┘
+```
 
 ## Developer SDK for Rift Frames
 
@@ -133,7 +161,7 @@ api.on('error', (err) => console.error(err));
 
 ## Frame ↔ Wallet Messaging
 
-All messages are JSON‑RPC 2.0‑style objects sent via `postMessage`.
+All messages are JSON‑RPC 2.0‑style objects sent via `postMessage`.
 
 ### Frame → Wallet
 
@@ -152,15 +180,64 @@ All messages are JSON‑RPC 2.0‑style objects sent via `postMessage`.
 
 ## Onboarding Without a Wallet
 
-### Smart Download Links
+### Smart Download Links
 
-`https://rift.app/download?rift=<URL‑encoded rift://…>`
+`https://rift.app/download?rift=<URL‑encoded rift://…>`
 
 If the wallet is installed, the extension overrides the link and injects the live frame. Otherwise, the page shows OS‑specific download buttons and social‑card metadata so platforms like Twitter render an attractive preview.
 
-### Link Generator
+#### Critical: OpenGraph Metadata
 
-Rift’s website provides a utility to turn any Rift URI into a compliant Smart Download Link, complete with OpenGraph tags.
+**OpenGraph metadata is essential** for Rift Frame success. When users share Smart Download Links on social platforms, rich metadata ensures:
+
+- **Better Discovery**: Attractive previews increase click-through rates
+- **Clear Intent**: Users understand what they're interacting with before clicking
+- **Professional Appearance**: Well-formatted cards build trust and credibility
+- **Platform Compatibility**: Consistent display across Twitter, Discord, Telegram, etc.
+
+**Required OpenGraph Tags:**
+
+```html
+<meta property="og:title" content="Mint Exclusive NFT Collection" />
+<meta property="og:description" content="Claim your limited edition NFT from the Cosmic Cats collection. Only 100 remaining!" />
+<meta property="og:image" content="https://mydapp.com/preview.jpg" />
+<meta property="og:url" content="https://rift.app/download?rift=rift://mydapp.com/mint" />
+<meta property="og:type" content="website" />
+
+<!-- Rift-specific metadata -->
+<meta property="rift:action" content="mint" />
+<meta property="rift:category" content="nft" />
+<meta property="rift:network" content="flow" />
+```
+
+**Best Practices:**
+- **Image**: Use 1200x630px images for optimal display
+- **Title**: Keep under 60 characters, be action-oriented
+- **Description**: 150-160 characters, clearly explain the value proposition
+- **URL**: Always use the Smart Download Link, not the raw `rift://` URI
+
+**Impact on User Experience:**
+
+Without proper metadata:
+```
+🔗 https://rift.app/download?rift=rift%3A%2F%2F...
+Generic link preview with no context
+```
+
+With rich metadata:
+```
+┌─────────────────────────────────────────┐
+│ 🖼️  [Attractive NFT Preview Image]      │
+│                                         │
+│ 🎯 Mint Exclusive NFT Collection        │
+│ 📝 Claim your limited edition NFT...    │
+│ 🔗 rift.app                            │
+└─────────────────────────────────────────┘
+```
+
+### Link Generator
+
+Rift's website provides a utility to turn any Rift URI into a compliant Smart Download Link, complete with OpenGraph tags.
 
 ## Summary
 
