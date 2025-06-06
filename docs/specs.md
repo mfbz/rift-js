@@ -86,7 +86,7 @@ The wallet detects `rift://` URIs in text content:
 - **All iframes are sandboxed**:
 
   ```html
-  sandbox="allow-scripts allow-forms allow-popups allow-downloads allow-same-origin"
+  sandbox="allow-scripts"
   ```
 
 - **CSP headers** are enforced to avoid iframe escape attempts
@@ -171,7 +171,7 @@ Although Rift Protocol is highly buildable and modern browser-compatible, there 
 - All injected Rifts are injected with an iframe with:
 
   ```html
-  sandbox="allow-scripts allow-forms allow-popups allow-downloads allow-same-origin"
+  sandbox="allow-scripts"
   ```
 
 - Disable access to `document.cookie`, `localStorage`, etc.

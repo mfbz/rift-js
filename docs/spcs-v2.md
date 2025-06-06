@@ -90,7 +90,7 @@ Set via `?rift-color=4E71FF` (hex RGB).
 
 | Threat                         | Mitigation                                                                                            |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Frame tries to escape sandbox  | `sandbox="allow-scripts allow-forms allow-popups allow-downloads allow-same-origin"` on every iframe. |
+| Frame tries to escape sandbox  | `sandbox="allow-scripts"` on every iframe. |
 | Phishing via untrusted domains | Frame must be manually injected by user with confirmation. Trusted origins may be allow‑listed.                             |
 | Mixed‑content blocking         | `rift://` **must** resolve to `https://`.                                                             |
 | Direct wallet API calls        | All communication is over `window.postMessage`; wallet exposes no HTTP endpoints.                     |
