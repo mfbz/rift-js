@@ -96,6 +96,54 @@ Set via `?rift-color=4E71FF` (hex RGB).
 | Mixed‑content blocking         | `rift://` **must** resolve to `https://`.                                                             |
 | Direct wallet API calls        | All communication is over `window.postMessage`; wallet exposes no HTTP endpoints.                     |
 | Malicious frame impersonation  | Registry-based verification system displays checkmark badges for approved domains.                     |
+| Code injection attacks         | Optional CSP headers provide additional security layer with enhanced UI indication.                    |
+
+### Content Security Policy (Optional)
+
+For enhanced security, Rift Frames **should** implement Content Security Policy headers. While optional, frames with proper CSP headers receive additional security indicators in the wallet UI.
+
+**Recommended CSP Headers:**
+
+```http
+Content-Security-Policy: default-src 'self'; script-src 'self';
+```
+
+- **`default-src 'self'`**: Sets the default policy for all resource types (images, stylesheets, fonts, etc.) to only allow loading from the same origin as the document. This prevents loading any external resources unless explicitly overridden by more specific directives.
+
+- **`script-src 'self'`**: Specifically restricts JavaScript execution to only scripts served from the same origin. This blocks:
+  - Inline `<script>` tags
+  - `eval()` and similar dynamic code execution
+  - External script loading from CDNs or other domains
+  - `javascript:` URLs
+
+**Security Impact:**
+- **Cross-Site Scripting (XSS) Prevention**: Even if an attacker injects malicious HTML, they cannot execute external scripts or inline JavaScript
+- **Data Exfiltration Protection**: Prevents malicious scripts from loading external resources to steal user data
+- **Supply Chain Attack Mitigation**: Blocks compromised external dependencies from executing
+
+**Additional Security Benefits:**
+- Prevents code injection attacks
+- Restricts resource loading to same-origin
+- Blocks inline scripts and eval()
+- Provides defense-in-depth security
+
+**Enhanced UI Indication:**
+
+Frames with proper CSP headers display an additional security shield icon:
+
+```
+┌─────────────────────────────────────┐
+│ ✓ Verified 🛡️ Secured │ MyDApp     │ ← Registry + CSP icons
+└─────────────────────────────────────┘
+vs.
+┌─────────────────────────────────────┐
+│ ✓ Verified │ MyDApp                 │ ← Registry only
+└─────────────────────────────────────┘
+vs.
+┌─────────────────────────────────────┐
+│ 🛡️ Secured │ MyDApp                │ ← CSP only (non-registry)
+└─────────────────────────────────────┘
+```
 
 ### Registry-Based Verification
 
@@ -111,6 +159,7 @@ To enhance user trust and security, Rift-compatible wallets maintain a curated *
 - Established developer reputation
 - Community governance approval
 - Adherence to Rift security best practices
+- Implementation of Content Security Policy headers (recommended)
 
 **User Experience:**
 ```
