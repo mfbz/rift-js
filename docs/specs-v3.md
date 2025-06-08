@@ -4,7 +4,7 @@ A complete reference for embedding secure, on-chain interactions inside any webp
 
 ## Overview
 
-**Rift Protocol** enables developers to ship mini‑dapps as **iframes** injected by a Rift-compatible wallet. Users interact directly where they discover the dApp with no redirects, no pop-ups, and no copy-pasting addresses.
+**Rift Protocol** enables developers to ship mini‑dapps called **Rift Wave** injected by a Rift-compatible wallet. Users interact directly where they discover the dApp with no redirects, no pop-ups, and no copy-pasting addresses.
 
 **V3 Update**: Rift is now **built on top of Flow’s FCL Frame Protocol**, extending it for automatic wallet connection, secure transaction tagging, and full compatibility with `@onflow/fcl` tooling.
 
@@ -12,25 +12,25 @@ A complete reference for embedding secure, on-chain interactions inside any webp
 
 | Component                  | Definition                                                                                                                        |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **Rift URI**               | A `rift://` scheme link that encodes the location of a Rift Frame and resolves to a secure `https://` iframe URL at runtime.      |
-| **Rift Frame**             | The hosted website endpoint loaded inside a sandboxed iframe. Communicates securely with the wallet via FCL Frame extensions.     |
-| **Rift-Compatible Wallet** | Browser extension that detects Rift URIs, injects frames, auto-connects wallet, and mediates transaction signing.                 |
-| **@onflow/rift SDK**       | Thin wrapper around `@onflow/fcl`, preconfigured for Rift Frames: auto-wallet connect, in-memory session, and metadata injection. |
+| **Rift URI**               | A `rift://` scheme link that encodes the location of a Rift Wave and resolves to a secure `https://` URL at runtime.      |
+| **Rift Wave**             | The hosted website endpoint loaded inside a sandboxed iframe. Communicates securely with the wallet via FCL Frame extensions.     |
+| **Rift-Compatible Wallet** | Browser extension that detects Rift URIs, injects Rift Waves, auto-connects wallet, and mediates transaction signing.                 |
+| **@onflow/rift SDK**       | Thin wrapper around `@onflow/fcl`, preconfigured for Rift Waves: auto-wallet connect, in-memory session, and metadata injection. |
 | **Smart Download Link**    | A fallback `https://` link embedding a Rift URI, guiding users to install the wallet and resuming the original intent.            |
 | **Bridge**                 | `window.postMessage` channel carrying JSON-RPC 2.0 messages between wallet and frame, extended with Rift metadata.                |
-| **Rift Registry**          | Curated list of verified Rift Frame domains displaying badges for enhanced user trust and security.                               |
+| **Rift Registry**          | Curated list of verified Rift Wave domains displaying badges for enhanced user trust and security.                               |
 
 ## How It Works
 
-1. **Author** hosts a Rift Frame website endpoint (e.g., `https://mydapp.com/rift-frame`).
-2. Share `rift://mydapp.com/rift-frame` in tweets, blog posts, or other channels.
+1. **Author** hosts a Rift Wave website endpoint (e.g., `https://mydapp.com/rift-wave`).
+2. Share `rift://mydapp.com/rift-wave` in tweets, blog posts, or other channels.
 3. When a Rift-compatible wallet detects the URI:
    * It fetches the HTML page, extracting:
      * **CSP headers** for security validation.
      * **OpenGraph metadata** for title, description, and preview image.
      * **Rift-specific metadata** from `<meta property="rift:*">` tags for frame configuration.
-   * The wallet shows a dedicated Rift Frame preview UI.
-   * Upon user approval, a sandboxed iframe is injected to load the Rift Frame.
+   * The wallet shows a dedicated Rift Wave preview UI.
+   * Upon user approval, a sandboxed iframe is injected to load the Rift Wave.
    * The wallet sends an auto-connect message (`RIFT_INIT`) with the user's wallet address and related configuration.
 4. Inside the iframe, `@onflow/rift` configures FCL automatically:
    * Preloads the user session.
@@ -52,7 +52,7 @@ riff://mydapp.com/rift/quiz
 
 ## Metadata Extraction
 
-When fetching the Rift Frame URL, the wallet extracts:
+When fetching the Rift Wave URL, the wallet extracts:
 
 ### OpenGraph Metadata
 
@@ -91,7 +91,7 @@ If Rift-specific metadata is not available, the wallet can fallback to query par
 
 ### Content Security Policy (CSP)
 
-For enhanced security, Rift Frames **should** implement Content Security Policy headers. While optional, frames with proper CSP headers receive additional security indicators in the wallet UI.
+For enhanced security, Rift Waves **should** implement Content Security Policy headers. While optional, frames with proper CSP headers receive additional security indicators in the wallet UI.
 
 **Recommended CSP Headers:**
 
@@ -182,7 +182,7 @@ This allows the wallet to:
 
 * Identify Rift-sourced transactions.
 * Apply frame-specific security rules.
-* Show UI badges ("Sent from Rift Frame").
+* Show UI badges ("Sent from Rift Wave").
 * Validate origin and trust levels.
 
 ## Developer SDK (`@onflow/rift`)
